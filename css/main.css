@@ -573,3 +573,96 @@ nav a.active {
   color: #555;
 }
 
+
+/* HAMBURGER NAVBAR */
+.navbar {
+  background: #0a3d62;
+  color: #fff;
+  padding: 15px 25px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+.nav-links {
+  display: flex;
+  gap: 20px;
+}
+
+.nav-links a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.nav-links .btn {
+  background: #fbc531;
+  color: #000;
+  padding: 8px 14px;
+  border-radius: 20px;
+}
+
+/* hide checkbox */
+#menu-toggle {
+  display: none;
+}
+
+/* hamburger hidden on desktop */
+.menu-icon {
+  display: none;
+  font-size: 26px;
+  cursor: pointer;
+}
+
+@media (max-width: 768px) {
+
+  /* show hamburger */
+  .menu-icon {
+    display: block;
+  }
+
+  /* SIDE MENU */
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: -260px;
+    height: 100vh;
+    width: 150px;
+    background: #0a3d62;
+    flex-direction: column;
+    padding: 60px 20px;
+    gap: 20px;
+    transition: 0.3s ease;
+    z-index: 1000;
+  }
+
+  /* show menu when checked */
+  #menu-toggle:checked ~ .nav-links {
+    right: 0;
+  }
+
+  /* close button */
+  .close-btn {
+    font-size: 22px;
+    color: #fff;
+    cursor: pointer;
+    margin-bottom: 20px;
+    align-self: flex-end;
+  }
+
+  .nav-links a {
+    font-size: 16px;
+    transition: transform 0.3s ease;
+  }
+
+  .nav-links a:hover {
+  color: #d36cb1 !important;
+  font-weight: 600;
+  transform: scale(1.1);
+  }
+}
