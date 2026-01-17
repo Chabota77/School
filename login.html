@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Bright Future Primary School</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header class="navbar">
+    <div class="logo">🎓 Bright Future</div>
+    <nav>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="academics.html">Academics</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html" class="active login-btn">Login</a>
+    </nav>
+  </header>
+
+  <!-- LOGIN HERO -->
+  <section class="login-hero">
+    <div class="login-container">
+      <h1>Login</h1>
+      <p>Enter your credentials to access your dashboard</p>
+
+      <form class="login-form">
+        <label for="user">Username</label>
+        <input type="text" id="user" placeholder="Enter your username" required>
+
+        <label for="pass">Password</label>
+        <input type="password" id="pass" placeholder="Enter your password" required>
+
+        <select id="role" required>
+          <option value="" disabled selected>Select Role</option>
+          <option value="teacher">Teacher</option>
+          <option value="admin">Admin</option>
+        </select>
+
+        <button type="submit" class="btn primary">Login</button>
+      </form>
+
+      <p class="login-note">For demo purposes, no backend is connected yet.</p>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© 2026 Bright Future Primary School. All Rights Reserved.</p>
+  </footer>
+
+</body>
+</html>

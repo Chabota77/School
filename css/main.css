@@ -1,0 +1,575 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: #f8f9fc;
+  color: #333;
+}
+
+/* NAVBAR */
+.navbar {
+  background: #0a3d62;
+  padding: 15px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  color: #fff;
+  font-weight: 700;
+  font-size: 20px;
+}
+
+.navbar nav a {
+  color: #fff;
+  margin-left: 20px;
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.login-btn {
+  background: #fbc531;
+  padding: 8px 14px;
+  border-radius: 20px;
+  color: #000 !important;
+  font-weight: 600;
+}
+
+/* HERO */
+.hero {
+  height: 90vh;
+  background: linear-gradient(rgba(10,61,98,0.7), rgba(10,61,98,0.7)),
+              url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #fff;
+}
+
+.hero-content h1 {
+  font-size: 42px;
+  margin-bottom: 15px;
+}
+
+.hero-content p {
+  font-size: 18px;
+  margin-bottom: 25px;
+}
+
+.btn {
+  padding: 12px 25px;
+  border-radius: 25px;
+  text-decoration: none;
+  margin: 5px;
+  display: inline-block;
+}
+
+.primary {
+  background: #fbc531;
+  color: #000;
+  font-weight: 600;
+}
+
+.secondary {
+  border: 2px solid #fff;
+  color: #fff;
+}
+
+/* FEATURES */
+.features {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.features h2 {
+  margin-bottom: 40px;
+  color: #0a3d62;
+}
+
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
+}
+
+.feature-card {
+  background: #fff;
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.feature-card span {
+  font-size: 40px;
+}
+
+/* HEAD TEACHER */
+.headteacher {
+  background: #eaf2f8;
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.headteacher-content {
+  max-width: 700px;
+  margin: auto;
+}
+
+/* ANNOUNCEMENTS */
+.announcements {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.announcement-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.announcement {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+/* FOOTER */
+.footer {
+  background: #0a3d62;
+  color: #fff;
+  text-align: center;
+  padding: 20px;
+}
+
+/* -- ABOUT PAGE -- */
+/* PAGE HERO */
+.page-hero {
+  background: linear-gradient(rgba(10,61,98,0.8), rgba(10,61,98,0.8)),
+              url("https://images.unsplash.com/photo-1596495577886-d920f1fb7238") center/cover no-repeat;
+  padding: 80px 20px;
+  text-align: center;
+  color: #fff;
+}
+
+.page-hero h1 {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+/* ACTIVE LINK */
+nav a.active {
+  border-bottom: 2px solid #fbc531;
+}
+
+/* ABOUT SECTION */
+.about-section {
+  padding: 60px 40px;
+}
+
+.about-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  align-items: center;
+}
+
+.about-text h2 {
+  color: #0a3d62;
+  margin-bottom: 15px;
+}
+
+.about-text p {
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+.about-image img {
+  width: 100%;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+/* MISSION & VISION */
+.mission-vision {
+  background: #eaf2f8;
+  padding: 60px 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  text-align: center;
+}
+
+.mv-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+/* VALUES */
+.values {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.values h2 {
+  color: #0a3d62;
+  margin-bottom: 30px;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 20px;
+}
+
+.value-card {
+  background: #fbc531;
+  padding: 20px;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* -- ACADEMICS -- */
+/* ACADEMICS */
+.academics {
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.academics h2 {
+  color: #0a3d62;
+  margin-bottom: 40px;
+}
+
+.academics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 30px;
+}
+
+.academic-card {
+  background: #fff;
+  padding: 30px 25px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.academic-card span {
+  font-size: 45px;
+}
+
+.academic-card h3 {
+  margin: 15px 0;
+  color: #0a3d62;
+}
+
+.academic-card p {
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.academic-card ul {
+  list-style: none;
+  padding: 0;
+}
+
+.academic-card ul li {
+  background: #f1f6fb;
+  margin: 6px 0;
+  padding: 8px;
+  border-radius: 10px;
+  font-size: 13px;
+}
+
+/* CURRICULUM */
+.curriculum {
+  background: #eaf2f8;
+  padding: 60px 40px;
+}
+
+.curriculum-content {
+  max-width: 900px;
+  margin: auto;
+  text-align: center;
+}
+
+.curriculum-content h2 {
+  color: #0a3d62;
+  margin-bottom: 15px;
+}
+
+.curriculum-content p {
+  margin-bottom: 30px;
+  line-height: 1.7;
+}
+
+.curriculum-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+
+.curriculum-item {
+  background: #fff;
+  padding: 15px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  font-weight: 500;
+}
+
+/* -- ADMISSIONS PAGE -- */
+/* ADMISSIONS */
+.admission-intro {
+  padding: 60px 40px 30px;
+  text-align: center;
+}
+
+.admission-intro h2 {
+  color: #0a3d62;
+  margin-bottom: 10px;
+}
+
+.admission-steps {
+  padding: 30px 40px 60px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 25px;
+  text-align: center;
+}
+
+.step-card {
+  background: #fff;
+  padding: 30px 20px;
+  border-radius: 18px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+}
+
+.step-card span {
+  font-size: 42px;
+}
+
+.step-card h3 {
+  margin: 10px 0;
+  color: #0a3d62;
+}
+
+/* REQUIREMENTS */
+.requirements {
+  background: #eaf2f8;
+  padding: 60px 40px;
+  text-align: center;
+}
+
+.requirements h2 {
+  color: #0a3d62;
+  margin-bottom: 30px;
+}
+
+.requirements-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.requirement-card {
+  background: #fff;
+  padding: 18px;
+  border-radius: 15px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  font-weight: 500;
+}
+
+/* CTA */
+.admission-cta {
+  padding: 60px 40px;
+  text-align: center;
+  background: linear-gradient(rgba(10,61,98,0.9), rgba(10,61,98,0.9));
+  color: #fff;
+}
+
+.admission-cta h2 {
+  margin-bottom: 10px;
+}
+
+/* -- GALLERY PAGE -- */
+/* GALLERY */
+.gallery-section {
+  padding: 60px 40px;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+}
+
+.gallery-item {
+  position: relative;
+  overflow: hidden;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  cursor: pointer;
+}
+
+.gallery-item img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.gallery-item:hover img {
+  transform: scale(1.1);
+}
+
+.caption {
+  position: absolute;
+  bottom: 0;
+  background: rgba(10,61,98,0.85);
+  color: #fff;
+  width: 100%;
+  padding: 10px;
+  font-weight: 500;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+
+.gallery-item:hover .caption {
+  background: rgba(10,61,98,0.95);
+}
+
+/* -- CONTACTS PAGE -- */
+/* CONTACT */
+.contact-section {
+  padding: 60px 40px;
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+}
+
+.contact-form h2,
+.contact-details h2 {
+  color: #0a3d62;
+  margin-bottom: 20px;
+}
+
+.contact-form form {
+  display: flex;
+  flex-direction: column;
+}
+
+.contact-form label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.contact-form input,
+.contact-form textarea {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.contact-form button {
+  width: 150px;
+  align-self: flex-start;
+}
+
+/* CONTACT DETAILS */
+.contact-details p {
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.map-placeholder {
+  margin-top: 15px;
+  height: 200px;
+  background: #dceaf7;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #0a3d62;
+  font-weight: 500;
+}
+
+/* -- LOGIN PAGE -- */
+/* LOGIN PAGE */
+.login-hero {
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(rgba(10,61,98,0.8), rgba(10,61,98,0.8)),
+              url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
+  color: #fff;
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.login-container {
+  background: #fff;
+  color: #333;
+  padding: 40px 30px;
+  border-radius: 18px;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
+.login-container h1 {
+  color: #0a3d62;
+  margin-bottom: 10px;
+}
+
+.login-container p {
+  font-size: 14px;
+  margin-bottom: 25px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.login-form label {
+  margin-bottom: 5px;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.login-form input,
+.login-form select {
+  padding: 12px 15px;
+  margin-bottom: 15px;
+  border-radius: 12px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.login-form button {
+  width: 100%;
+  padding: 12px;
+  border-radius: 25px;
+  font-weight: 600;
+}
+
+.login-note {
+  margin-top: 15px;
+  font-size: 12px;
+  color: #555;
+}
+
