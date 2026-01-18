@@ -32,6 +32,7 @@ body {
   font-size: 14px;
 }
 
+
 .login-btn {
   background: #fbc531;
   padding: 8px 14px;
@@ -665,4 +666,88 @@ nav a.active {
   font-weight: 600;
   transform: scale(1.1);
   }
+}
+
+/* PUPIL RESULTS PAGE */
+.results-page {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 0 20px;
+  font-family: 'Poppins', sans-serif;
+}
+
+.results-intro {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.results-intro h1 {
+  color: #0a3d62;
+  font-size: 28px;
+}
+
+.results-intro p {
+  color: #555;
+  font-size: 16px;
+}
+
+.results-form form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.results-form input,
+.results-form select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 250px;
+}
+
+.results-form .btn.primary {
+  padding: 10px 20px;
+  background: #0a3cff;
+  color: #fff;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.results-form .btn.primary:hover {
+  opacity: 0.9;
+}
+
+.results-display table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.results-display th,
+.results-display td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.results-display th {
+  background: #0a3d62;
+  color: #fff;
+}
+
+.results-display td {
+  font-weight: 500;
+}
+
+.results-display .note {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #888;
+  text-align: center;
 }

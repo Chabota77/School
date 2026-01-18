@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Check Results | Bright Future Primary School</title>
+  <link rel="stylesheet" href="/css/main.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- HEADER / NAVIGATION -->
+  <header class="navbar">
+    <div class="logo">Bright Future Primary School</div>
+    <nav class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="academics.html">Academics</a>
+      <a href="admissions.html">Admissions</a>
+      <a href="contact.html">Contact</a>
+      <a href="check-results.html" class="active">Check Results</a>
+    </nav>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="results-page">
+    <section class="results-intro">
+      <h1>Check Your Results</h1>
+      <p>Enter your name and select the term to view your academic results.</p>
+    </section>
+
+    <!-- RESULTS FORM -->
+    <section class="results-form">
+      <form>
+        <input type="text" placeholder="Enter your name" required>
+        <select required>
+          <option value="" disabled selected>Select Term</option>
+          <option>Term 1</option>
+          <option>Term 2</option>
+          <option>Term 3</option>
+        </select>
+        <button type="submit" class="btn primary">Check Results</button>
+      </form>
+    </section>
+
+    <!-- MOCK RESULTS TABLE -->
+    <section class="results-display">
+      <h2>Results</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Subject</th>
+            <th>Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Mathematics</td>
+            <td>78</td>
+          </tr>
+          <tr>
+            <td>English</td>
+            <td>84</td>
+          </tr>
+          <tr>
+            <td>Science</td>
+            <td>69</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="note">⚠️ This is a UI demo. Results are not saved yet.</p>
+    </section>
+  </main>
+
+</body>
+</html>

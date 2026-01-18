@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Enter Results | Bright Future Primary School</title>
+  <link rel="stylesheet" href="../CSS/teacher-dashboard.css">
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <aside class="teacher-sidebar">
+    <div class="teacher-logo">Teacher Panel</div>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="results.html" class="active">Enter Results</a>
+      <a href="/main/login.html">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="teacher-main">
+    <header class="teacher-header">
+      <h1>Enter Student Results</h1>
+      <p>Input the grades for your class</p>
+    </header>
+
+    <!-- RESULTS FORM -->
+    <section class="results-entry">
+      <table>
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Mathematics</th>
+            <th>English</th>
+            <th>Science</th>
+            <th>Social Studies</th>
+            <th>Comments</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Example row -->
+          <tr>
+            <td>John Doe</td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Comment"></td>
+          </tr>
+          <tr>
+            <td>Jane Smith</td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Grade"></td>
+            <td><input type="text" placeholder="Comment"></td>
+          </tr>
+          <!-- Add more rows as needed -->
+        </tbody>
+      </table>
+
+      <button class="btn primary">Save Results</button>
+    </section>
+  </main>
+
+</body>
+</html>

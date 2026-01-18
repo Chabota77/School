@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tuition Payments | Admin</title>
+  <link rel="stylesheet" href="../CSS/admin-dashboard.css">
+</head>
+<body>
+
+  <!-- SIDEBAR (same as admin dashboard) -->
+  <aside class="admin-sidebar">
+    <h2>Admin Panel</h2>
+    <nav>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="payments.html" class="active">Tuition Payments</a>
+      <a href="#">Teachers</a>
+      <a href="#">Students</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Tuition Fee Payments</h1>
+      <p>Overview of all payments made by students</p>
+    </header>
+
+    <!-- MONTH SELECTOR (UI ONLY) -->
+<section class="month-selector">
+  <div class="month-left">
+    <label for="month">Select Month</label>
+    <select id="month">
+      <option>January</option>
+      <option>February</option>
+      <option>March</option>
+      <option>April</option>
+      <option>May</option>
+      <option>June</option>
+      <option>July</option>
+      <option>August</option>
+      <option>September</option>
+      <option>October</option>
+      <option>November</option>
+      <option>December</option>
+    </select>
+  </div>
+
+  <div class="month-right">
+    <span class="year">2026</span>
+  </div>
+</section>
+
+    <!-- MONTHLY PAYMENT SUMMARY -->
+<section class="payment-summary">
+  <div class="summary-card">
+    <h3>ZMW 12,500</h3>
+    <p>Total Collected<br><span>This Month</span></p>
+  </div>
+
+  <div class="summary-card warning">
+    <h3>ZMW 4,500</h3>
+    <p>Outstanding<br><span>Balances</span></p>
+  </div>
+
+  <div class="summary-card success">
+    <h3>18</h3>
+    <p>Fully Paid<br><span>Students</span></p>
+  </div>
+
+  <div class="summary-card danger">
+    <h3>7</h3>
+    <p>Unpaid / Partial<br><span>Students</span></p>
+  </div>
+</section>
+
+    <!-- FILTER SECTION (UI only) -->
+    <section class="payment-filters">
+      <input type="text" placeholder="Search student name">
+      <select>
+        <option>All Classes</option>
+        <option>Grade 1</option>
+        <option>Grade 2</option>
+        <option>Grade 3</option>
+      </select>
+      <select>
+        <option>All Status</option>
+        <option>Paid</option>
+        <option>Partial</option>
+        <option>Unpaid</option>
+      </select>
+    </section>
+
+    <!-- PAYMENTS TABLE -->
+    <section class="payments-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Class</th>
+            <th>Total Fees</th>
+            <th>Amount Paid</th>
+            <th>Balance</th>
+            <th>Status</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>John Doe</td>
+            <td>Grade 3</td>
+            <td>ZMW 3,000</td>
+            <td>ZMW 3,000</td>
+            <td>ZMW 0</td>
+            <td class="paid">Paid</td>
+            <td>12 Jan 2026</td>
+          </tr>
+          <tr>
+            <td>Jane Smith</td>
+            <td>Grade 2</td>
+            <td>ZMW 3,000</td>
+            <td>ZMW 1,500</td>
+            <td>ZMW 1,500</td>
+            <td class="partial">Partial</td>
+            <td>08 Jan 2026</td>
+          </tr>
+          <tr>
+            <td>Peter Banda</td>
+            <td>Grade 1</td>
+            <td>ZMW 3,000</td>
+            <td>ZMW 0</td>
+            <td>ZMW 3,000</td>
+            <td class="unpaid">Unpaid</td>
+            <td>-</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <p class="note">⚠️ UI only. Payment data is not connected to a database yet.</p>
+  </main>
+
+</body>
+</html>

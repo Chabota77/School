@@ -107,3 +107,48 @@ body {
 .links-grid a:hover {
   background: #ffda6a;
 }
+
+/* RESULTS ENTRY PAGE */
+.results-entry table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 30px;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.results-entry th, .results-entry td {
+  padding: 12px 15px;
+  text-align: center;
+  border-bottom: 1px solid #f1f1f1;
+}
+
+.results-entry th {
+  background: #0a3d62;
+  color: #fff;
+}
+
+.results-entry input[type="text"] {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 80px;
+  text-align: center;
+}
+
+.results-entry .btn.primary {
+  margin-top: 20px;
+  padding: 10px 25px;
+  border-radius: 25px;
+  background: #fbc531;
+  color: #000;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+}
+
+.results-entry .btn.primary:hover {
+  background: #ffda6a;
+}
