@@ -14,12 +14,10 @@
     <div class="teacher-logo">Teacher Panel</div>
     <nav>
       <a href="#" class="active">Dashboard</a>
-      <a href="#">My Classes</a>
-      <a href="#">Attendance</a>
+      <a href="#pupils-table">Pupils</a>
       <a href="results.html">Enter Results</a> <!-- NEW BUTTON -->
-      <a href="#">Messages</a>
-      <a href="#">Settings</a>
-      <a href="/main/login.html">Logout</a>
+      <a href="profile.html">Profile</a>
+      <a href="/login.html">Logout</a>
     </nav>
   </aside>
 
@@ -32,10 +30,7 @@
 
     <!-- STATS CARDS -->
     <section class="stats-cards">
-      <div class="card">
-        <h3>My Classes</h3>
-        <p>3</p>
-      </div>
+      
       <div class="card">
         <h3>Students</h3>
         <p>75</p>
@@ -55,9 +50,53 @@
   <h2>Quick Links</h2>
   <div class="links-grid">
     <a href="#">Profile</a>
-    <a href="#">Class Attendance</a>
     <a href="#">Assignments</a>
     <a href="results.html">Enter Results</a> <!-- NEW BUTTON -->
+  </div>
+</section>
+
+<!-- Pupils Section -->
+<section class="teacher-section" id="pupils-table">
+  <h2>My Pupils</h2>
+
+  <div class="table-wrapper">
+    <table class="teacher-table">
+      <thead>
+        <tr>
+          <th>Full Name</th>
+          <th>Class</th>
+          <th>Roll No.</th>
+          <th>Age</th>
+          <th>Gender</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>John Banda</td>
+          <td>Grade 7A</td>
+          <td>001</td>
+          <td>13</td>
+          <td>M</td>
+          <td>
+            <button class="btn view">View</button>
+            <button class="btn message">✉</button>
+          </td>
+        </tr>
+        <tr>
+          <td>Mary Mwila</td>
+          <td>Grade 7A</td>
+          <td>002</td>
+          <td>12</td>
+          <td>F</td>
+          <td>
+            <button class="btn view">View</button>
+            <button class="btn message">✉</button>
+          </td>
+        </tr>
+        <!-- Add more pupils as needed -->
+      </tbody>
+    </table>
   </div>
 </section>
   </main>
