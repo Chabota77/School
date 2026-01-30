@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceptance Letter</title>
+    <style>
+        body {
+            font-family: 'Times New Roman', serif;
+            margin: 40px;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .address {
+            font-size: 14px;
+            color: #555;
+        }
+
+        .content {
+            margin-top: 20px;
+            text-align: justify;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .signature {
+            margin-top: 40px;
+            font-weight: bold;
+        }
+
+        .print-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #000;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+
+        @media print {
+            .print-btn {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <button onclick="window.print()" class="print-btn">Print / Download PDF</button>
+
+    <div class="header">
+        <div class="logo">🎓 K-Lombe School</div>
+        <div class="address">P.O. Box 12345, Lusaka, Zambia | +260 97 123 4567</div>
+        <div class="address">Email: info@brightfuture.edu.zm</div>
+    </div>
+
+    <p style="text-align: right;"><strong>Date:</strong> <span id="date"></span></p>
+
+    <p><strong>To:</strong> <span id="parentName">[Parent Name]</span></p>
+    <p><strong>Ref:</strong> Admission for <span id="studentName">[Student Name]</span></p>
+
+    <div class="content">
+        <p>Dear Parent/Guardian,</p>
+
+        <p>We are pleased to inform you that your application for the admission of <strong><span
+                    id="studentName2"></span></strong> to <strong><span id="className"></span></strong> at Bright Future
+            Primary School for the 2026 Academic Year has been <strong>ACCEPTED</strong>.</p>
+
+        <p>We believe that K-Lombe School will provide an excellent environment for your child to grow
+            academically and socially. We look forward to partnering with you in your child's education.</p>
+
+        <p>Please note the following important dates:</p>
+        <ul>
+            <li><strong>School Opens:</strong> 12th January 2026</li>
+            <li><strong>Orientation Day:</strong> 10th January 2026 (09:00 AM)</li>
+        </ul>
+
+        <p>Uniforms and textbooks can be purchased from the school shop between 08:00 and 16:00 hours on weekdays.</p>
+
+        <p>Congratulations once again on your admission.</p>
+    </div>
+
+    <div class="signature">
+        <p>Yours Faithfully,</p>
+        <br>
+        <p>__________________________</p>
+        <p>Principal</p>
+        <p>K-Lombe School</p>
+    </div>
+
+    <div class="footer">
+        "Nurturing Tomorrow's Leaders Today"
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        document.getElementById('date').innerText = new Date().toLocaleDateString();
+        document.getElementById('parentName').innerText = params.get('parent') || 'Parent/Guardian';
+        document.getElementById('studentName').innerText = params.get('student') || 'Student';
+        document.getElementById('studentName2').innerText = params.get('student') || 'Student';
+        document.getElementById('className').innerText = params.get('class') || 'Grade';
+    </script>
+</body>
+
+</html>

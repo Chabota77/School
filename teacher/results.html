@@ -1,12 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Enter Results | Bright Future Primary School</title>
-  <link rel="stylesheet" href="../CSS/teacher-dashboard.css">
+  <title>Enter Results | K-Lombe School</title>
+  <link rel="stylesheet" href="/css/teacher-dashboard.css">
 </head>
+
 <body>
+
+  <!-- MOBILE SIDEBAR TOGGLE -->
+  <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle">
+  <label for="sidebar-toggle" class="sidebar-icon">☰</label>
+  <label for="sidebar-toggle" class="sidebar-overlay"></label>
 
   <!-- SIDEBAR -->
   <aside class="teacher-sidebar">
@@ -14,7 +21,7 @@
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="results.html" class="active">Enter Results</a>
-      <a href="/main/login.html">Logout</a>
+      <a href="/login.html">Logout</a>
     </nav>
   </aside>
 
@@ -38,31 +45,19 @@
             <th>Comments</th>
           </tr>
         </thead>
-        <tbody>
-          <!-- Example row -->
-          <tr>
-            <td>John Doe</td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Comment"></td>
-          </tr>
-          <tr>
-            <td>Jane Smith</td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Grade"></td>
-            <td><input type="text" placeholder="Comment"></td>
-          </tr>
-          <!-- Add more rows as needed -->
+        <tbody id="resultsTableBody">
+          <!-- Dynamic rows will be loaded here -->
         </tbody>
       </table>
 
       <button class="btn primary">Save Results</button>
+      <button class="btn secondary" id="downloadBtn" style="margin-left: 10px; background-color: #28a745;">Download
+        CSV</button>
     </section>
   </main>
 
+
+  <script src="/js/teacher-results.js"></script>
 </body>
+
 </html>

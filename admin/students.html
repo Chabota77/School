@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Students | K-Lombe School</title>
+  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- MOBILE SIDEBAR TOGGLE -->
+  <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle">
+  <label for="sidebar-toggle" class="sidebar-icon">☰</label>
+  <label for="sidebar-toggle" class="sidebar-overlay"></label>
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="admin-logo">Admin Panel</div>
+    <nav>
+      <a href="/admin/dashboard.html">Dashboard</a>
+      <a href="/admin/dashboard.html#teachers">Teachers</a>
+      <a href="/admin/students.html" class="active">Students</a>
+      <a href="/admin/dashboard.html#announcement">Announcements</a>
+      <a href="/admin/payments.html">View Tuition Payments</a>
+      <a href="/admin/dashboard.html#admissions">Admissions</a>
+      <a href="/login.html">Logout</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+    <header class="admin-header">
+      <h1>Manage Students</h1>
+      <p>Add, edit, or remove students from the system.</p>
+    </header>
+
+    <section class="admin-section">
+      <div class="section-header">
+        <h2>All Students</h2>
+        <label for="addStudentModal" class="primary-btn" id="add-teacher">+ Add Student</label>
+      </div>
+
+      <!-- Filters -->
+      <div class="payment-filters" style="margin-bottom: 20px;">
+        <select id="filter-class">
+          <option value="">All Classes</option>
+          <!-- Dynamic classes -->
+        </select>
+        <input type="text" id="search-student" placeholder="Search by Name or Roll No..." style="width: 250px;">
+      </div>
+
+      <div class="table-wrapper">
+        <table class="teachers-table">
+          <thead>
+            <tr>
+              <th>Roll No</th>
+              <th>Name</th>
+              <th>Gender</th>
+              <th>Age</th>
+              <th>Class</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="students-list">
+            <!-- Dynamic students will be loaded here -->
+            <tr>
+              <td colspan="5" style="text-align: center;">Loading students...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Add/Edit Student Modal -->
+    <input type="checkbox" id="addStudentModal" class="modal-toggle">
+    <div class="modal">
+      <div class="modal-content">
+        <h3 id="modal-title">Add New Student</h3>
+        <form class="assign-form" id="student-form">
+          <input type="hidden" id="student-id">
+          <label>
+            Full Name
+            <input type="text" id="student-name" placeholder="e.g. John Doe" required>
+          </label>
+          <label>
+            Age
+            <input type="number" id="student-age" placeholder="e.g. 10" required>
+          </label>
+          <label>
+            Gender
+            <select id="student-gender" required>
+              <option value="">Select Gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </label>
+          <label>
+            Class
+            <select id="student-class" required>
+              <option value="">Select class</option>
+              <!-- Dynamic classes -->
+            </select>
+          </label>
+          <label>
+            Status
+            <select id="student-status">
+              <option value="Enrolled">Enrolled</option>
+              <option value="Graduated">Graduated</option>
+              <option value="Withdrawn">Withdrawn</option>
+            </select>
+          </label>
+          <div class="modal-actions">
+            <label for="addStudentModal" class="btn cancel">Cancel</label>
+            <button type="submit" class="btn save">Save Student</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <script src="/js/admin-students.js"></script>
+</body>
+
+</html>

@@ -1,17 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Check Results | Bright Future Primary School</title>
+  <title>Check Results |K-Lombe School</title>
   <link rel="stylesheet" href="/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
   <!-- HEADER / NAVIGATION -->
   <header class="navbar">
-    <div class="logo">Bright Future Primary School</div>
+    <div class="logo">K-Lombe School</div>
     <nav class="nav-links">
       <a href="index.html">Home</a>
       <a href="academics.html">Academics</a>
@@ -30,9 +32,10 @@
 
     <!-- RESULTS FORM -->
     <section class="results-form">
-      <form>
-        <input type="text" placeholder="Enter your name" required>
-        <select required>
+      <form id="resultsForm">
+        <input type="text" id="studentId" placeholder="Student ID (e.g. 2500001)" required>
+        <input type="text" id="studentName" placeholder="Full Name (e.g. John Banda)" required>
+        <select id="termSelect" required>
           <option value="" disabled selected>Select Term</option>
           <option>Term 1</option>
           <option>Term 2</option>
@@ -50,26 +53,20 @@
           <tr>
             <th>Subject</th>
             <th>Score</th>
+            <th>Grade</th>
           </tr>
         </thead>
-        <tbody>
-          <tr>
-            <td>Mathematics</td>
-            <td>78</td>
-          </tr>
-          <tr>
-            <td>English</td>
-            <td>84</td>
-          </tr>
-          <tr>
-            <td>Science</td>
-            <td>69</td>
-          </tr>
+        <tbody id="resultsTableBody">
+          <!-- Dynamic results -->
         </tbody>
       </table>
-      <p class="note">⚠️ This is a UI demo. Results are not saved yet.</p>
+      <p class="note" id="statusMessage"></p>
+      <button class="btn secondary" id="downloadResultsBtn"
+        style="display:none; margin-top: 15px; background-color: #28a745; color: white;">Download PDF/CSV</button>
     </section>
   </main>
 
+  <script src="/js/check-results.js"></script>
 </body>
+
 </html>

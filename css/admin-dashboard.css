@@ -68,7 +68,7 @@ body {
   padding: 25px;
   border-radius: 15px;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .stats-cards .card h3 {
@@ -99,7 +99,7 @@ body {
   background: #fff;
   padding: 20px;
   border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   max-width: 600px;
 }
 
@@ -200,7 +200,7 @@ body {
   background: #fff;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 .payments-table th,
@@ -217,7 +217,7 @@ body {
 
 /* Status colors */
 .paid {
-  color: green;
+  color: rgb(0, 109, 0);
   font-weight: bold;
 }
 
@@ -250,7 +250,7 @@ body {
   background: #ffffff;
   padding: 20px;
   border-radius: 14px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   text-align: center;
   border-left: 6px solid #0a3d62;
 }
@@ -307,7 +307,7 @@ body {
   padding: 15px 20px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
 }
 
 .month-left label {
@@ -419,7 +419,7 @@ body {
   background: #0b1220;
   padding: 16px 20px;
   border-radius: 14px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
 }
 
 
@@ -440,34 +440,79 @@ body {
   color: #94a3b8;
 }
 
-/* Compact buttons */
-.teacher-actions {
-  display: flex;
-  gap: 6px;
+/* Button styles matching user request */
+.teacher-actions .btn,
+.admin-table .btn,
+.payments-table .btn,
+.announcement-actions button,
+.actions .btn {
+  padding: 8px 16px;
+  border-radius: 50px;
+  /* Pill shape */
+  border: none;
+  color: white;
+  font-weight: 600;
+  font-size: 12px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+  width: auto !important;
+  /* Override fixed width */
+  height: auto !important;
 }
 
-.teacher-actions .icon {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  border-radius: 8px;
-  font-size: 14px;
+.teacher-actions .btn::after,
+.admin-table .btn::after,
+.payments-table .btn::after,
+.announcement-actions button::after,
+.actions .btn::after {
+  content: '>';
+  font-family: monospace;
+  font-weight: bold;
 }
 
-/* Button colors */
-.teacher-actions .message {
-  background: #2563eb;
-  color: #fff;
+.teacher-actions .btn:hover,
+.admin-table .btn:hover,
+.payments-table .btn:hover,
+.announcement-actions button:hover,
+.actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-.teacher-actions .edit {
-  background: #16a34a;
-  color: #fff;
+/* Specific Gradient Colors */
+.btn.message,
+.btn.view-mode,
+.btn.accept {
+  background: linear-gradient(90deg, #1cb5e0 0%, #000851 100%);
+  /* Blue -> Dark Blue */
 }
 
-.teacher-actions .delete {
-  background: #dc2626;
-  color: #fff;
+.btn.edit {
+  background: linear-gradient(90deg, #00C9FF 0%, #92FE9D 100%);
+  /* Blue -> Green */
+  color: #000;
+}
+
+.btn.delete,
+.btn.reject {
+  background: linear-gradient(90deg, #fc466b 0%, #3f5efb 100%);
+  /* Red -> Blue/Purple */
+}
+
+.btn.save {
+  background: linear-gradient(90deg, #00b09b 0%, #96c93d 100%);
+  /* Green */
+}
+
+.btn.cancel {
+  background: linear-gradient(90deg, #3f4c6b 0%, #606c88 100%);
+  /* Grey */
 }
 
 /* Status badges */
@@ -475,18 +520,32 @@ body {
   display: inline-block;
   padding: 4px 10px;
   border-radius: 20px;
-  font-size: 12px;
-  margin-top: 6px;
+  font-size: 11px;
+  text-transform: uppercase;
+  font-weight: bold;
 }
 
-.status.active {
-  background: #16a34a;
-  color: #fff;
+.status.active,
+.status.paid,
+.status.approved {
+  background: rgba(22, 163, 74, 0.2);
+  color: #2f6328;
+  border: 1px solid #16a34a;
 }
 
-.status.leave {
-  background: #f59e0b;
-  color: #fff;
+.status.leave,
+.status.partial,
+.status.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: #d97706;
+  border: 1px solid #d97706;
+}
+
+.status.unpaid,
+.status.rejected {
+  background: rgba(220, 38, 38, 0.2);
+  color: #dc2626;
+  border: 1px solid #dc2626;
 }
 
 /* Teacher action buttons */
@@ -539,7 +598,7 @@ body {
   z-index: 1000;
 }
 
-.modal-toggle:checked + .modal {
+.modal-toggle:checked+.modal {
   display: flex;
 }
 
@@ -549,7 +608,7 @@ body {
   border-radius: 14px;
   width: 100%;
   max-width: 420px;
-  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
 }
 
 .modal-content h3 {
@@ -632,7 +691,7 @@ body {
 .btn.save {
   background: #16a34a;
   color: #fff;
-} 
+}
 
 #add-teacher {
   padding: 12px 25px;
@@ -696,15 +755,125 @@ body {
 .admin-table .actions {
   display: flex;
   gap: 6px;
-  
+
 }
 
-.admin-table .btn {
-  margin: 2px;
-  width: 50px;
-  height: 32px;
-  border-radius: 6px;
-  border: none;
-  cursor: pointer;
-  font-size: 13px;
+/* MOBILE RESPONSIVENESS */
+.sidebar-toggle,
+.sidebar-overlay,
+.sidebar-icon {
+  display: none;
+}
+
+@media screen and (max-width: 768px) {
+
+  /* Toggle Logic */
+  .sidebar-toggle {
+    display: none;
+  }
+
+  /* Icon defaults (Closed state) */
+  .sidebar-icon {
+    display: block;
+    position: fixed;
+    top: 15px;
+    left: 20px;
+    z-index: 1001;
+    font-size: 28px;
+    color: #0a3d62;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 5px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+  }
+
+  /* Icon when Open */
+  .sidebar-toggle:checked~.sidebar-icon {
+    left: 170px;
+    /* Move inside sidebar */
+    background: transparent;
+    color: #fff;
+    /* White icon on dark sidebar */
+    box-shadow: none;
+  }
+
+  .sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+    display: none;
+    backdrop-filter: blur(2px);
+  }
+
+  .sidebar-toggle:checked~.sidebar-overlay {
+    display: block;
+  }
+
+  /* Sidebar Adjustment */
+  .admin-sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    height: 100vh;
+    z-index: 1000;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .sidebar-toggle:checked~.admin-sidebar {
+    left: 0;
+  }
+
+  /* Main Content Adjustment */
+  .admin-main {
+    padding: 80px 20px 30px;
+  }
+
+  .admin-header h1 {
+    font-size: 24px;
+  }
+
+  /* Grid Adjustments - Compact/Squared for Mobile */
+  .stats-cards,
+  .summary-cards,
+  .payment-summary {
+    grid-template-columns: repeat(2, 1fr);
+    /* 2 columns for square look */
+    gap: 12px;
+  }
+
+  /* Table Adjustments */
+  .table-wrapper,
+  .admin-table,
+  .payments-table table,
+  .teachers-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    width: 100%;
+    /* Ensure full width */
+  }
+
+  /* Ensure table header fills width */
+  table {
+    min-width: 100%;
+  }
+
+  thead th {
+    /* Prevent empty space by ensuring background spans content */
+    background: #0a3d62;
+  }
+
+  /* Modal Adjustments */
+  .modal-content {
+    width: 90%;
+    margin: 20px;
+    padding: 20px;
+  }
 }

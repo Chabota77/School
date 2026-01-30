@@ -1,13 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Teacher Dashboard | Bright Future Primary School</title>
+  <title>Teacher Dashboard | K-Lombe School</title>
   <link rel="stylesheet" href="/css/teacher-dashboard.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
+
+  <!-- MOBILE SIDEBAR TOGGLE -->
+  <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle">
+  <label for="sidebar-toggle" class="sidebar-icon">☰</label>
+  <label for="sidebar-toggle" class="sidebar-overlay"></label>
 
   <!-- SIDEBAR -->
   <aside class="teacher-sidebar">
@@ -30,7 +37,7 @@
 
     <!-- STATS CARDS -->
     <section class="stats-cards">
-      
+
       <div class="card">
         <h3>Students</h3>
         <p>75</p>
@@ -46,60 +53,39 @@
     </section>
 
     <!-- QUICK LINKS -->
-   <section class="teacher-links">
-  <h2>Quick Links</h2>
-  <div class="links-grid">
-    <a href="#">Profile</a>
-    <a href="#">Assignments</a>
-    <a href="results.html">Enter Results</a> <!-- NEW BUTTON -->
-  </div>
-</section>
+    <section class="teacher-links">
+      <h2>Quick Links</h2>
+      <div class="links-grid">
+        <a href="profile.html">Profile</a>
+        <a href="results.html">Enter Results</a> <!-- NEW BUTTON -->
+      </div>
+    </section>
 
-<!-- Pupils Section -->
-<section class="teacher-section" id="pupils-table">
-  <h2>My Pupils</h2>
+    <!-- Pupils Section -->
+    <section class="teacher-section" id="pupils-table">
+      <h2>My Pupils</h2>
 
-  <div class="table-wrapper">
-    <table class="teacher-table">
-      <thead>
-        <tr>
-          <th>Full Name</th>
-          <th>Class</th>
-          <th>Roll No.</th>
-          <th>Age</th>
-          <th>Gender</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>John Banda</td>
-          <td>Grade 7A</td>
-          <td>001</td>
-          <td>13</td>
-          <td>M</td>
-          <td>
-            <button class="btn view">View</button>
-            <button class="btn message">✉</button>
-          </td>
-        </tr>
-        <tr>
-          <td>Mary Mwila</td>
-          <td>Grade 7A</td>
-          <td>002</td>
-          <td>12</td>
-          <td>F</td>
-          <td>
-            <button class="btn view">View</button>
-            <button class="btn message">✉</button>
-          </td>
-        </tr>
-        <!-- Add more pupils as needed -->
-      </tbody>
-    </table>
-  </div>
-</section>
+      <div class="table-wrapper">
+        <table class="teacher-table">
+          <thead>
+            <tr>
+              <th>Roll No</th>
+              <th>Full Name</th>
+              <th>Gender</th>
+              <th>Class</th>
+              <th>Age</th>
+              <th>Actions</th>
+            </tr>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </section>
   </main>
 
+  <script src="/js/teacher-dashboard.js"></script>
 </body>
+
 </html>

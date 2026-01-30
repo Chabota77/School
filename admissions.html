@@ -1,43 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admissions | Bright Future Primary School</title>
+  <title>Admissions | K-Lombe School</title>
   <link rel="stylesheet" href="/css/main.css" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
   <!-- NAVBAR -->
   <header class="navbar">
-  <div class="logo">🎓Bright Future School</div>
+    <div class="logo">🎓K-Lombe School</div>
 
-  <!-- HAMBURGER CHECKBOX -->
-  <input type="checkbox" id="menu-toggle">
+    <!-- HAMBURGER CHECKBOX -->
+    <input type="checkbox" id="menu-toggle">
 
-  <!-- HAMBURGER ICON -->
-  <label for="menu-toggle" class="menu-icon">
-    ☰
-  </label>
+    <!-- HAMBURGER ICON -->
+    <label for="menu-toggle" class="menu-icon">
+      ☰
+    </label>
 
-  <!-- NAV LINKS -->
-  <nav class="nav-links">
-    <label for="menu-toggle" class="close-btn">✖</label>
-    <a href="index.html">Home</a>
-    <a href="about.html">About</a>
-    <a href="academics.html">Academics</a>
-    <a href="admissions.html" class="active">Admissions</a>
-    <a href="gallery.html">Gallery</a>
-    <a href="contact.html">Contact</a>
-    <a href="login.html" class="btn">Login</a>
-  </nav>
-</header>
+    <!-- NAV LINKS -->
+    <nav class="nav-links">
+      <label for="menu-toggle" class="close-btn">✖</label>
+      <a href="index.html">Home</a>
+      <a href="about.html">About</a>
+      <a href="academics.html">Academics</a>
+      <a href="admissions.html" class="active">Admissions</a>
+      <a href="gallery.html">Gallery</a>
+      <a href="contact.html">Contact</a>
+      <a href="login.html" class="btn">Login</a>
+    </nav>
+  </header>
 
   <!-- PAGE HERO -->
   <section class="page-hero">
     <h1>Admissions</h1>
     <p>Join our learning community today</p>
+  </section>
+
+
+  <!-- REQUIREMENTS -->
+  <section class="requirements">
+    <h2>Admission Requirements</h2>
+
+    <div class="requirements-grid">
+      <div class="requirement-card">Previous School Report</div>
+      <div class="requirement-card">Passport Size Photos</div>
+      <div class="requirement-card">Transfer Letter (if applicable)</div>
+      <div class="requirement-card">Parent/Guardian Number</div>
+    </div>
+  </section>
+
+  <!-- ADMISSION FORM -->
+  <section class="admission-form-section" style="padding: 50px 20px; background: #fff;">
+    <div
+      style="max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
+      <h2 style="text-align: center; margin-bottom: 20px; color: #0a3d62;">Online Admission Form</h2>
+      <form id="admissionForm">
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px;">Student Full Name</label>
+          <input type="text" id="student_name" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px;">Age</label>
+          <input type="number" id="age" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px;">Class Applied For</label>
+          <select id="class_applied_id" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+            <option value="">Select Class</option>
+            <!-- Dynamic classes -->
+          </select>
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px;">Parent / Guardian Name</label>
+          <input type="text" id="parent_name" required
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="margin-bottom: 15px;">
+          <label style="display: block; margin-bottom: 5px;">Phone Number</label>
+          <input type="tel" id="phone" required placeholder="+260..."
+            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <button type="submit" class="btn primary" style="width: 100%; padding: 12px; font-size: 16px;">Submit
+          Application</button>
+      </form>
+      <p id="formMessage" style="margin-top: 15px; text-align: center;"></p>
+    </div>
   </section>
 
   <!-- ADMISSION INTRO -->
@@ -76,30 +132,56 @@
     </div>
   </section>
 
-  <!-- REQUIREMENTS -->
-  <section class="requirements">
-    <h2>Admission Requirements</h2>
 
-    <div class="requirements-grid">
-      <div class="requirement-card">Birth Certificate Copy</div>
-      <div class="requirement-card">Previous School Report</div>
-      <div class="requirement-card">Passport Size Photos</div>
-      <div class="requirement-card">Transfer Letter (if applicable)</div>
-      <div class="requirement-card">Parent/Guardian ID</div>
-    </div>
-  </section>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Load classes
+      fetch('/api/classes')
+        .then(res => res.json())
+        .then(data => {
+          const select = document.getElementById('class_applied_id');
+          select.innerHTML = '<option value="">Select Class</option>' +
+            data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        });
 
-  <!-- CALL TO ACTION -->
-  <section class="admission-cta">
-    <h2>Ready to Enroll Your Child?</h2>
-    <p>Visit our school or contact us for more information.</p>
-    <a href="#" class="btn primary">Contact Admissions</a>
-  </section>
+      document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const data = {
+          student_name: document.getElementById('student_name').value,
+          age: document.getElementById('age').value,
+          class_applied_id: document.getElementById('class_applied_id').value,
+          parent_name: document.getElementById('parent_name').value,
+          phone: document.getElementById('phone').value
+        };
+
+        const msg = document.getElementById('formMessage');
+        try {
+          const response = await fetch('/api/admissions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+          });
+          const result = await response.json();
+          if (response.ok) {
+            msg.style.color = 'green';
+            msg.textContent = 'Application submitted successfully! We will contact you soon.';
+            document.getElementById('admissionForm').reset();
+          } else {
+            msg.style.color = 'red';
+            msg.textContent = result.error || 'Submission failed.';
+          }
+        } catch (err) {
+          msg.textContent = 'An error occurred. Please try again later.';
+        }
+      });
+    });
+  </script>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>© 2026 Bright Future Primary School. All Rights Reserved.</p>
+    <p>© 2026 K-Lombe School. All Rights Reserved.</p>
   </footer>
 
 </body>
+
 </html>

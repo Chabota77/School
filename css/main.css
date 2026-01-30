@@ -44,8 +44,8 @@ body {
 /* HERO */
 .hero {
   height: 90vh;
-  background: linear-gradient(rgba(10,61,98,0.7), rgba(10,61,98,0.7)),
-              url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
+  background: linear-gradient(rgba(10, 61, 98, 0.7), rgba(10, 61, 98, 0.7)),
+    url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,22 +64,44 @@ body {
 }
 
 .btn {
-  padding: 12px 25px;
-  border-radius: 25px;
+  padding: 10px 24px;
+  border-radius: 50px;
+  /* Pill shape */
   text-decoration: none;
   margin: 5px;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 13px;
+  border: none;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn::after {
+  content: '>';
+  font-family: monospace;
+  font-weight: bold;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
 .primary {
-  background: #fbc531;
+  background: linear-gradient(90deg, #fbc531 0%, #fae69e 100%);
   color: #000;
-  font-weight: 600;
 }
 
 .secondary {
-  border: 2px solid #fff;
+  /* For transparent/white border buttons, we might want a gradient border or just keep it simple but pill shaped */
+  background: linear-gradient(90deg, #3f4c6b 0%, #606c88 100%);
   color: #fff;
+  border: none;
 }
 
 /* FEATURES */
@@ -103,7 +125,7 @@ body {
   background: #fff;
   padding: 25px;
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .feature-card span {
@@ -138,7 +160,7 @@ body {
   background: #fff;
   padding: 20px;
   border-radius: 12px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
 }
 
 /* FOOTER */
@@ -152,8 +174,8 @@ body {
 /* -- ABOUT PAGE -- */
 /* PAGE HERO */
 .page-hero {
-  background: linear-gradient(rgba(10,61,98,0.8), rgba(10,61,98,0.8)),
-              url("https://images.unsplash.com/photo-1596495577886-d920f1fb7238") center/cover no-repeat;
+  background: linear-gradient(rgba(10, 61, 98, 0.8), rgba(10, 61, 98, 0.8)),
+    url("https://images.unsplash.com/photo-1596495577886-d920f1fb7238") center/cover no-repeat;
   padding: 80px 20px;
   text-align: center;
   color: #fff;
@@ -194,7 +216,7 @@ nav a.active {
 .about-image img {
   width: 100%;
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 /* MISSION & VISION */
@@ -211,7 +233,7 @@ nav a.active {
   background: #fff;
   padding: 30px;
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 /* VALUES */
@@ -260,7 +282,7 @@ nav a.active {
   background: #fff;
   padding: 30px 25px;
   border-radius: 18px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .academic-card span {
@@ -322,7 +344,7 @@ nav a.active {
   background: #fff;
   padding: 15px;
   border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   font-weight: 500;
 }
 
@@ -350,7 +372,7 @@ nav a.active {
   background: #fff;
   padding: 30px 20px;
   border-radius: 18px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
 }
 
 .step-card span {
@@ -384,7 +406,7 @@ nav a.active {
   background: #fff;
   padding: 18px;
   border-radius: 15px;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   font-weight: 500;
 }
 
@@ -392,7 +414,7 @@ nav a.active {
 .admission-cta {
   padding: 60px 40px;
   text-align: center;
-  background: linear-gradient(rgba(10,61,98,0.9), rgba(10,61,98,0.9));
+  background: linear-gradient(rgba(10, 61, 98, 0.9), rgba(10, 61, 98, 0.9));
   color: #fff;
 }
 
@@ -416,7 +438,7 @@ nav a.active {
   position: relative;
   overflow: hidden;
   border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   cursor: pointer;
 }
 
@@ -434,7 +456,7 @@ nav a.active {
 .caption {
   position: absolute;
   bottom: 0;
-  background: rgba(10,61,98,0.85);
+  background: rgba(10, 61, 98, 0.85);
   color: #fff;
   width: 100%;
   padding: 10px;
@@ -444,7 +466,7 @@ nav a.active {
 }
 
 .gallery-item:hover .caption {
-  background: rgba(10,61,98,0.95);
+  background: rgba(10, 61, 98, 0.95);
 }
 
 /* -- CONTACTS PAGE -- */
@@ -514,8 +536,8 @@ nav a.active {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(rgba(10,61,98,0.8), rgba(10,61,98,0.8)),
-              url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
+  background: linear-gradient(rgba(10, 61, 98, 0.8), rgba(10, 61, 98, 0.8)),
+    url("https://images.unsplash.com/photo-1588072432836-e10032774350") center/cover no-repeat;
   color: #fff;
   text-align: center;
   padding: 40px 20px;
@@ -528,7 +550,7 @@ nav a.active {
   border-radius: 18px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
 }
 
 .login-container h1 {
@@ -643,7 +665,7 @@ nav a.active {
   }
 
   /* show menu when checked */
-  #menu-toggle:checked ~ .nav-links {
+  #menu-toggle:checked~.nav-links {
     right: 0;
   }
 
@@ -662,9 +684,9 @@ nav a.active {
   }
 
   .nav-links a:hover {
-  color: #d36cb1 !important;
-  font-weight: 600;
-  transform: scale(1.1);
+    color: #d36cb1 !important;
+    font-weight: 600;
+    transform: scale(1.1);
   }
 }
 
@@ -724,7 +746,7 @@ nav a.active {
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
   border-radius: 12px;
   overflow: hidden;
 }
