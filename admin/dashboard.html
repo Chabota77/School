@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | K-Lombe School</title>
-  <link rel="stylesheet" href="/css/admin-dashboard.css">
+  <link rel="stylesheet" href="../css/admin-dashboard.css">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
@@ -22,11 +22,15 @@
     <nav>
       <a href="#dashboard" class="active">Dashboard</a>
       <a href="#teachers">Teachers</a>
-      <a href="/admin/students.html">Students</a>
+      <a href="students.html">Students</a>
       <a href="#announcement">Announcements</a>
       <a href="payments.html">View Tuition Payments</a>
       <a href="#admissions">Admissions</a>
-      <a href="/login.html" id="logoutBtn">Logout</a>
+      <a href="#gallery-mgmt" id="link-gallery">🎨 Gallery</a>
+      <a href="#results-mgmt" id="link-results">📊 Results</a>
+      <a href="#reports">Reports</a>
+      <a href="#logs">System Logs</a>
+      <a href="../login.html" id="logoutBtn">Logout</a>
     </nav>
   </aside>
 
@@ -39,7 +43,7 @@
 
     <!-- STATS CARDS -->
     <section class="stats-cards">
-      <div class="card" onclick="window.location.href='/admin/students.html'" style="cursor:pointer;">
+      <div class="card" onclick="window.location.href='students.html'" style="cursor:pointer;">
         <h3>Total Students</h3>
         <p>0</p>
       </div>
@@ -61,7 +65,7 @@
     <!-- ANNOUNCEMENTS PANEL -->
 
     <!-- ANNOUNCEMENTS SECTION -->
-    <section class="admin-announcements">
+    <section class="admin-announcements" id="announcement">
       <h2>School Announcements</h2>
 
       <!-- CREATE ANNOUNCEMENT -->
@@ -82,9 +86,13 @@
       </div>
 
       <!-- ANNOUNCEMENT LIST -->
-      <div class="announcement-list" id="announcement">
+      <div class="announcement-list">
         <h3>Recent Announcements</h3>
-
+        <!-- List code is truncated here in replace content, I should be careful not to delete existing rows if I don't mean to.
+             Wait, I am replacing a huge block. I need to be careful.
+             The TargetContent shows I am replacing from Sidebar to End of Teachers Section.
+             Let me Re-Verify the TargetContent.
+        -->
         <div class="announcement-card">
           <div class="announcement-header">
             <h4>School Reopening</h4>
@@ -96,259 +104,353 @@
           </div>
 
           <p>School will reopen on Monday. All pupils should be in full uniform.</p>
-
           <span>Audience: Everyone • 10 Jan 2026</span>
-
-          <div class="announcement-card">
-            <div class="announcement-header">
-              <h4>Teachers Meeting</h4>
-
-              <div class="announcement-actions">
-                <button class="edit-btn">Edit</button>
-                <button class="delete-btn">Delete</button>
-
-              </div>
-            </div>
-
-            <p>There will be staff meeting at 14:00 hours</p>
-
-            <span>Audience: Teachers • 05 Jan 2026</span>
-          </div>
+        </div>
+      </div>
     </section>
 
-    <section class="admin-section">
+    <!-- TEACHERS SECTION -->
+    <section class="admin-section" id="teachers" style="display:none; animation: fadeIn 0.4s ease-out;">
+      <div class="section-header">
+        <h2>Teachers</h2>
+        <label for="addTeacherModal" class="primary-btn" id="add-teacher">+ Add Teacher</label>
+      </div>
 
-      <section class="admin-section">
-        <div class="section-header">
-          <h2>Teachers</h2>
-          <label for="addTeacherModal" class="primary-btn" id="add-teacher">+ Add Teacher</label>
-        </div>
+      <!-- Teachers Filters -->
+      <div class="payment-filters" style="margin-bottom: 20px;">
+        <select id="filter-teacher-class">
+          <option value="">All Classes</option>
+          <!-- Dynamic classes will be loaded here -->
+        </select>
+        <input type="text" id="search-teacher" placeholder="Search Teacher..." style="width: 250px;">
+      </div>
 
-        <!-- Teachers Filters -->
-        <div class="payment-filters" style="margin-bottom: 20px;">
-          <select id="filter-teacher-class">
-            <option value="">All Classes</option>
-            <!-- Dynamic classes will be loaded here -->
+      <div class="table-wrapper">
+        <table class="teachers-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Subject</th>
+              <th>Class</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <!-- Dynamic Teachers -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Admissions Section -->
+    <section class="admin-section" id="admissions">
+      <h2>Pending Admissions</h2>
+
+      <!-- Admissions Filters -->
+      <div class="payment-filters" style="margin-bottom: 20px;">
+        <select id="filter-admission-class">
+          <option value="">All Classes</option>
+          <!-- Dynamic classes will be loaded here -->
+        </select>
+        <input type="text" id="search-admission" placeholder="Search Student/Parent..." style="width: 250px;">
+      </div>
+
+      <div class="table-wrapper">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>Class Applied</th>
+              <th>Date Applied</th>
+              <th>Contact</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>John Doe</td>
+              <td>Grade 7</td>
+              <td>2026-01-15</td>
+              <td>Mary Doe</td>
+              <td>
+                <button class="btn accept">Accept</button>
+                <button class="btn reject">Reject</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Jane Smith</td>
+              <td>Grade 5</td>
+              <td>2026-01-17</td>
+              <td>Robert Smith</td>
+              <td>
+                <button class="btn accept">Accept</button>
+                <button class="btn reject">Reject</button>
+              </td>
+            </tr>
+            <!-- More rows here -->
+          </tbody>
+        </table>
+    </section>
+
+    <!-- Add Teacher Modal -->
+    <input type="checkbox" id="addTeacherModal" class="modal-toggle">
+
+    <div class="modal">
+      <div class="modal-content">
+        <h3>Add New Teacher</h3>
+
+        <form class="assign-form">
+          <label>
+            Full Name
+            <input type="text" placeholder="e.g. Mr. John Banda">
+          </label>
+
+          <label>
+            Email Address
+            <input type="email" placeholder="teacher@school.com">
+          </label>
+
+          <label>
+            Password
+            <input type="password" placeholder="Create a password">
+          </label>
+
+          <label>
+            Phone Number
+            <input type="tel" placeholder="+260...">
+          </label>
+
+          <label>
+            Subject
+            <select>
+              <option>Select subject</option>
+              <option>Mathematics</option>
+              <option>English</option>
+              <option>Science</option>
+              <option>Social Studies</option>
+            </select>
+          </label>
+
+          <label>
+            Class
+            <select>
+              <option>Select class</option>
+              <option>Grade 7A</option>
+              <option>Grade 7B</option>
+              <option>Grade 8A</option>
+              <option>Grade 9B</option>
+            </select>
+          </label>
+
+          <label>
+            Status
+            <select>
+              <option>Active</option>
+              <option>On Leave</option>
+            </select>
+          </label>
+
+          <div class="modal-actions">
+            <label for="addTeacherModal" class="btn cancel">Cancel</label>
+            <button type="button" class="btn save">Add Teacher</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Message Teacher Modal -->
+    <input type="checkbox" id="messageTeacherModal" class="modal-toggle">
+
+    <div class="modal">
+      <div class="modal-content">
+        <h3>Message Teacher</h3>
+
+        <form class="assign-form">
+          <label>
+            Message Type
+            <select>
+              <option>General</option>
+              <option>Announcement</option>
+              <option>Urgent</option>
+              <option>Class Related</option>
+            </select>
+          </label>
+
+          <label>
+            Message
+            <textarea rows="4" placeholder="Write your message here..."></textarea>
+          </label>
+
+          <div class="modal-actions">
+            <label for="messageTeacherModal" class="btn cancel">Cancel</label>
+            <button type="button" class="btn save">Send Message</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Assign Subject & Class Modal -->
+    <input type="checkbox" id="assignModal" class="modal-toggle">
+
+    <div class="modal">
+      <div class="modal-content">
+        <h3>Assign Subject & Class</h3>
+
+        <form class="assign-form">
+          <label>
+            Subject
+            <select>
+              <option>Mathematics</option>
+              <option>English</option>
+              <option>Science</option>
+              <option>Social Studies</option>
+            </select>
+          </label>
+
+          <label>
+            Class
+            <select>
+              <option>Grade 7A</option>
+              <option>Grade 7B</option>
+              <option>Grade 8A</option>
+              <option>Grade 9B</option>
+            </select>
+          </label>
+
+          <label>
+            Status
+            <select>
+              <option>Active</option>
+              <option>On Leave</option>
+            </select>
+          </label>
+
+          <div class="modal-actions">
+            <label for="assignModal" class="btn cancel">Cancel</label>
+            <button type="button" class="btn save">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- GALLERY MANAGEMENT -->
+    <div id="gallery-mgmt" class="content-section" style="display: none; animation: fadeIn 0.4s ease-out;">
+      <div class="admin-header">
+        <h1>Gallery Management</h1>
+        <p>Add or remove images from the public gallery</p>
+      </div>
+
+      <!-- Add Image Form -->
+      <div class="announcement-form" style="margin-top: 30px;">
+        <h3>Add New Image</h3>
+        <form id="addGalleryForm">
+          <label>Upload Image (Computer)</label>
+          <input type="file" id="imgUpload" accept="image/*" style="padding: 10px; background: #f8f9fa;">
+
+          <div style="text-align: center; margin: 10px 0; color: #888; font-size: 0.9em; font-weight: 500;">— OR —
+          </div>
+
+          <label>Image URL (Unsplash or direct link)</label>
+          <input type="url" id="imgUrl" placeholder="https://...">
+
+          <label>Caption</label>
+          <input type="text" id="imgCaption" placeholder="e.g. Sports Day 2026" required>
+
+          <label>Category</label>
+          <select id="imgCategory">
+            <option value="Classroom">Classroom</option>
+            <option value="Sports">Sports</option>
+            <option value="Events">Events</option>
+            <option value="Arts">Arts</option>
+            <option value="Other">Other</option>
           </select>
-          <input type="text" id="search-teacher" placeholder="Search Teacher..." style="width: 250px;">
-        </div>
 
-        <div class="table-wrapper">
-          <table class="teachers-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Subject</th>
-                <th>Class</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              <!-- Dynamic Teachers -->
-            </tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- Admissions Section -->
-      <section class="admin-section" id="admissions">
-        <h2>Pending Admissions</h2>
-
-        <!-- Admissions Filters -->
-        <div class="payment-filters" style="margin-bottom: 20px;">
-          <select id="filter-admission-class">
-            <option value="">All Classes</option>
-            <!-- Dynamic classes will be loaded here -->
-          </select>
-          <input type="text" id="search-admission" placeholder="Search Student/Parent..." style="width: 250px;">
-        </div>
-
-        <div class="table-wrapper">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Student Name</th>
-                <th>Class Applied</th>
-                <th>Date Applied</th>
-                <th>Contact</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>John Doe</td>
-                <td>Grade 7</td>
-                <td>2026-01-15</td>
-                <td>Mary Doe</td>
-                <td>
-                  <button class="btn accept">Accept</button>
-                  <button class="btn reject">Reject</button>
-                </td>
-              </tr>
-              <tr>
-                <td>Jane Smith</td>
-                <td>Grade 5</td>
-                <td>2026-01-17</td>
-                <td>Robert Smith</td>
-                <td>
-                  <button class="btn accept">Accept</button>
-                  <button class="btn reject">Reject</button>
-                </td>
-              </tr>
-              <!-- More rows here -->
-            </tbody>
-          </table>
-      </section>
-
-      <!-- Add Teacher Modal -->
-      <input type="checkbox" id="addTeacherModal" class="modal-toggle">
-
-      <div class="modal">
-        <div class="modal-content">
-          <h3>Add New Teacher</h3>
-
-          <form class="assign-form">
-            <label>
-              Full Name
-              <input type="text" placeholder="e.g. Mr. John Banda">
-            </label>
-
-            <label>
-              Email Address
-              <input type="email" placeholder="teacher@school.com">
-            </label>
-
-            <label>
-              Password
-              <input type="password" placeholder="Create a password">
-            </label>
-
-            <label>
-              Phone Number
-              <input type="tel" placeholder="+260...">
-            </label>
-
-            <label>
-              Subject
-              <select>
-                <option>Select subject</option>
-                <option>Mathematics</option>
-                <option>English</option>
-                <option>Science</option>
-                <option>Social Studies</option>
-              </select>
-            </label>
-
-            <label>
-              Class
-              <select>
-                <option>Select class</option>
-                <option>Grade 7A</option>
-                <option>Grade 7B</option>
-                <option>Grade 8A</option>
-                <option>Grade 9B</option>
-              </select>
-            </label>
-
-            <label>
-              Status
-              <select>
-                <option>Active</option>
-                <option>On Leave</option>
-              </select>
-            </label>
-
-            <div class="modal-actions">
-              <label for="addTeacherModal" class="btn cancel">Cancel</label>
-              <button type="button" class="btn save">Add Teacher</button>
-            </div>
-          </form>
-        </div>
+          <button type="submit" class="btn primary">Add to Gallery</button>
+        </form>
       </div>
 
-      <!-- Message Teacher Modal -->
-      <input type="checkbox" id="messageTeacherModal" class="modal-toggle">
-
-      <div class="modal">
-        <div class="modal-content">
-          <h3>Message Teacher</h3>
-
-          <form class="assign-form">
-            <label>
-              Message Type
-              <select>
-                <option>General</option>
-                <option>Announcement</option>
-                <option>Urgent</option>
-                <option>Class Related</option>
-              </select>
-            </label>
-
-            <label>
-              Message
-              <textarea rows="4" placeholder="Write your message here..."></textarea>
-            </label>
-
-            <div class="modal-actions">
-              <label for="messageTeacherModal" class="btn cancel">Cancel</label>
-              <button type="button" class="btn save">Send Message</button>
-            </div>
-          </form>
+      <!-- Current Gallery Grid -->
+      <div style="margin-top: 40px;">
+        <h3 style="color: #0a3d62; margin-bottom: 20px;">Current Images</h3>
+        <div class="gallery-grid" id="adminGalleryGrid"
+          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+          <!-- Populated by JS -->
         </div>
       </div>
+    </div>
 
-      <!-- Assign Subject & Class Modal -->
-      <input type="checkbox" id="assignModal" class="modal-toggle">
-
-      <div class="modal">
-        <div class="modal-content">
-          <h3>Assign Subject & Class</h3>
-
-          <form class="assign-form">
-            <label>
-              Subject
-              <select>
-                <option>Mathematics</option>
-                <option>English</option>
-                <option>Science</option>
-                <option>Social Studies</option>
-              </select>
-            </label>
-
-            <label>
-              Class
-              <select>
-                <option>Grade 7A</option>
-                <option>Grade 7B</option>
-                <option>Grade 8A</option>
-                <option>Grade 9B</option>
-              </select>
-            </label>
-
-            <label>
-              Status
-              <select>
-                <option>Active</option>
-                <option>On Leave</option>
-              </select>
-            </label>
-
-            <div class="modal-actions">
-              <label for="assignModal" class="btn cancel">Cancel</label>
-              <button type="button" class="btn save">Save</button>
-            </div>
-          </form>
+    <!-- RESULTS MANAGEMENT SECTION -->
+    <div id="results-mgmt" class="content-section" style="display:none;">
+      <header class="section-header">
+        <h2>Results Management</h2>
+      </header>
+      <div class="card" style="padding: 20px; max-width: 600px;">
+        <h3>Publish Term Results</h3>
+        <p>Students can only see results when you publish them.</p>
+        <div style="display:flex; gap:15px; margin-top:20px; align-items:end;">
+          <label>
+            Year
+            <select id="pub-year"
+              style="display:block; margin-top:5px; padding:10px; border-radius:5px; border:1px solid #ddd;"></select>
+          </label>
+          <label>
+            Term
+            <select id="pub-term"
+              style="display:block; margin-top:5px; padding:10px; border-radius:5px; border:1px solid #ddd;"></select>
+          </label>
+          <button id="btn-publish-toggle" class="btn primary">Load Status</button>
         </div>
+        <p id="pub-status-text" style="margin-top:15px; font-weight:bold; color:#666;"></p>
       </div>
+    </div>
+
+    <!-- REPORTS SECTION -->
+    <div id="reports" class="content-section" style="display:none;">
+      <header class="section-header">
+        <h2>School Reports</h2>
+        <button class="btn primary" onclick="window.SchoolReports.exportData('summary')">Export Summary</button>
+      </header>
+      <div class="stats-cards" id="reportCards">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+
+    <!-- LOGS SECTION -->
+    <div id="logs" class="content-section" style="display:none;">
+      <header class="section-header">
+        <h2>System Activity Logs</h2>
+        <button class="btn secondary" onclick="localStorage.removeItem('system_logs'); location.reload();">Clear
+          Logs</button>
+      </header>
+      <div class="table-container">
+        <table class="logs-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Action</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody id="logsTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
-  <script src="/js/admin-dashboard.js"></script>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/reports.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/admin-dashboard.js"></script>
   <script>
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
-      localStorage.removeItem('adminToken');
-      localStorage.removeItem('user');
+      e.preventDefault();
+      window.SchoolAuth.logout();
     });
   </script>
 </body>

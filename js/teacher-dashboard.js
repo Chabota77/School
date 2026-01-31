@@ -1,76 +1,73 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const token = localStorage.getItem('adminToken'); // We can reuse the same token key or rename it to 'authToken'
-    const userStr = localStorage.getItem('user');
+    const { SchoolData } = window;
+    const user = JSON.parse(localStorage.getItem('currentUser'));
 
-    if (!token || !userStr) {
-        window.location.href = '/login.html';
+    if (!user || user.role !== 'teacher') {
+        window.location.href = '../login.html';
         return;
     }
 
-    const user = JSON.parse(userStr);
-    if (user.role !== 'teacher') {
-        alert('Access denied. Teachers only.');
-        window.location.href = '/login.html';
+    // Find the Teacher Profile linked to this User
+    const teachers = SchoolData.getCollection('teachers');
+    const teacherProfile = teachers.find(t => t.userId === user.id) || teachers.find(t => t.email === user.username);
+    // ^ Fallback if userId not set but username matches email, just for safety in mock data
+
+    if (!teacherProfile) {
+        alert('Teacher profile not found for this user.');
         return;
     }
 
     // Set Welcome Name
     const headerName = document.querySelector('.teacher-header h1');
-    if (headerName) headerName.textContent = `Welcome, ${user.name || user.username}`;
+    if (headerName) headerName.textContent = `Welcome, ${teacherProfile.name}`;
+
+    // Get Classes
+    const myClassIds = teacherProfile.classIds || [];
+    const myClasses = SchoolData.getClasses().filter(c => myClassIds.includes(c.id));
+
+    // Get Students
+    const allStudents = SchoolData.getCollection('students');
+    const myStudents = allStudents.filter(s => myClassIds.includes(s.classId));
 
     // Load Stats
-    fetch('/api/teacher/stats', {
-        headers: { 'Authorization': `Bearer ${token}` }
-    })
-        .then(res => res.json())
-        .then(stats => {
-            const cards = document.querySelectorAll('.stats-cards .card p');
-            if (cards.length >= 3) {
-                cards[0].textContent = stats.students || 0;
-                cards[1].textContent = stats.pendingResults || 0;
-                cards[2].textContent = stats.messages || 0;
-            }
-        })
-        .catch(err => console.error('Error loading stats:', err));
+    const loadStats = () => {
+        const cards = document.querySelectorAll('.stats-cards .card p');
+        if (cards.length >= 3) {
+            cards[0].textContent = myStudents.length;
+            cards[1].textContent = '0'; // Assignments Pending (Mock)
+            cards[2].textContent = '0'; // New Messages (Mock)
+        }
+    };
 
     // Load Pupils
     const loadPupils = () => {
-        fetch('/api/teacher/pupils', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-            .then(res => res.json())
-            .then(pupils => {
-                console.log('Pupils loaded:', pupils);
-                const tbody = document.querySelector('.teacher-table tbody');
-                if (!tbody) {
-                    console.error('Table body validation failed. Selector: .teacher-table tbody');
-                    return;
-                }
+        const tbody = document.querySelector('.teacher-table tbody');
+        if (!tbody) return;
 
-                if (pupils.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="6">No pupils assigned or found.</td></tr>';
-                    return;
-                }
+        if (myStudents.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">No pupils assigned to your classes.</td></tr>';
+            return;
+        }
 
-                const rows = pupils.map(p => `
-                <tr>
-                    <td>${2500000 + p.id}</td>
-                    <td>${p.name}</td>
-                    <td>${p.gender || '-'}</td>
-                    <td>${p.class_name || 'N/A'}</td>
-                    <td>${p.age}</td>
-                    <td>
-                        <button class="btn view">View</button>
-                        <button class="btn message">✉</button>
-                    </td>
-                </tr>
-            `).join('');
-
-                console.log('Rendering rows:', rows);
-                tbody.innerHTML = rows;
-            })
-            .catch(err => console.error('Error loading pupils:', err));
+        tbody.innerHTML = myStudents.map(s => {
+            const cls = myClasses.find(c => c.id === s.classId);
+            return `
+            <tr>
+                <td>${s.id}</td>
+                <td>${s.name}</td>
+                <td>${s.gender || 'N/A'}</td>
+                <td>${cls ? cls.name : s.classId}</td>
+                <td>${s.age || 'N/A'}</td>
+                <td>
+                    <button class="btn view" onclick="alert('View Student Details')">View</button>
+                    <button class="btn message" onclick="alert('Message Student')">✉</button>
+                </td>
+            </tr>
+            `;
+        }).join('');
     };
 
+    // INIT
+    loadStats();
     loadPupils();
 });

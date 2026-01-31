@@ -43,40 +43,42 @@
   </section>
 
   <!-- GALLERY GRID -->
+  <!-- GALLERY GRID -->
   <section class="gallery-section">
-    <div class="gallery-grid">
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1588072432836-e10032774350" alt="Classroom activity">
-        <div class="caption">Learning Through Play</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1596495577886-d920f1fb7238" alt="Kids painting">
-        <div class="caption">Creative Arts & Crafts</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1606312619070-d48b4c652a52" alt="Sports day">
-        <div class="caption">Sports & Teamwork</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e" alt="School assembly">
-        <div class="caption">School Assemblies & Events</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1596495577886-d920f1fb7238" alt="Group learning">
-        <div class="caption">Collaborative Learning</div>
-      </div>
-      <div class="gallery-item">
-        <img src="https://images.unsplash.com/photo-1588072432836-e10032774350" alt="Outdoor activities">
-        <div class="caption">Outdoor & Sports Activities</div>
-      </div>
+    <div class="gallery-grid" id="publicGalleryGrid">
+      <!-- Loaded via JS -->
+      <p style="text-align:center; width:100%; grid-column: 1 / -1;">Loading gallery...</p>
     </div>
   </section>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const grid = document.getElementById('publicGalleryGrid');
+      const images = window.SchoolData.getGallery();
+
+      if (images.length === 0) {
+        grid.innerHTML = '<p>No images found in gallery.</p>';
+        return;
+      }
+
+      grid.innerHTML = images.map(img => `
+            <div class="gallery-item" style="animation: fadeIn 0.5s ease-out;">
+                <img src="${img.url}" alt="${img.caption}" style="width:100%; height:200px; object-fit:cover; border-radius:12px;">
+                <div class="caption" style="padding:15px; font-weight:600; color:#2d3436;">${img.caption}</div>
+            </div>
+          `).join('');
+    });
+  </script>
 
   <!-- FOOTER -->
   <footer class="footer">
     <p>© 2026 K-Lombe School. All Rights Reserved.</p>
   </footer>
 
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
 </body>
 
 </html>

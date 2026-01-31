@@ -133,45 +133,54 @@
   </section>
 
 
+  <script src="js/data.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/app.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       // Load classes
-      fetch('/api/classes')
-        .then(res => res.json())
-        .then(data => {
-          const select = document.getElementById('class_applied_id');
+      if (window.SchoolData) {
+        const classes = window.SchoolData.getClasses();
+        const select = document.getElementById('class_applied_id');
+        if (select) {
           select.innerHTML = '<option value="">Select Class</option>' +
-            data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-        });
+            classes.map(c => `<option value="${c.name}">${c.name}</option>`).join(''); // Use Name for admissions
+        }
+      }
 
-      document.getElementById('admissionForm').addEventListener('submit', async (e) => {
+      document.getElementById('admissionForm').addEventListener('submit', (e) => {
         e.preventDefault();
-        const data = {
-          student_name: document.getElementById('student_name').value,
-          age: document.getElementById('age').value,
-          class_applied_id: document.getElementById('class_applied_id').value,
-          parent_name: document.getElementById('parent_name').value,
-          phone: document.getElementById('phone').value
-        };
+        const studentName = document.getElementById('student_name').value;
+        const className = document.getElementById('class_applied_id').value;
+        const parentName = document.getElementById('parent_name').value;
+        const phone = document.getElementById('phone').value;
+        const age = document.getElementById('age').value; // Optional stored
 
         const msg = document.getElementById('formMessage');
-        try {
-          const response = await fetch('/api/admissions', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+
+        if (studentName && className && parentName && phone) {
+          // Add to Admissions Collection
+          window.SchoolData.addItem('admissions', {
+            student_name: studentName,
+            class_name: className,
+            date_applied: new Date().toISOString().split('T')[0],
+            parent_name: parentName,
+            phone: phone,
+            status: 'Pending',
+            email: 'contact@parent.com' // Mock
           });
-          const result = await response.json();
-          if (response.ok) {
-            msg.style.color = 'green';
-            msg.textContent = 'Application submitted successfully! We will contact you soon.';
-            document.getElementById('admissionForm').reset();
-          } else {
-            msg.style.color = 'red';
-            msg.textContent = result.error || 'Submission failed.';
-          }
-        } catch (err) {
-          msg.textContent = 'An error occurred. Please try again later.';
+
+          msg.style.color = 'green';
+          msg.textContent = 'Application submitted successfully! We will contact you soon.';
+          document.getElementById('admissionForm').reset();
+
+          // Log it
+          if (window.SchoolUtils) window.SchoolUtils.logAction('New Admission', `Application received for ${studentName}`);
+
+        } else {
+          msg.style.color = 'red';
+          msg.textContent = 'Please fill all fields.';
         }
       });
     });

@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enter Results | K-Lombe School</title>
-  <link rel="stylesheet" href="/css/teacher-dashboard.css">
+  <link rel="stylesheet" href="../css/teacher-dashboard.css">
 </head>
 
 <body>
@@ -21,7 +21,7 @@
     <nav>
       <a href="dashboard.html">Dashboard</a>
       <a href="results.html" class="active">Enter Results</a>
-      <a href="/login.html">Logout</a>
+      <a href="../login.html" id="logoutBtn">Logout</a>
     </nav>
   </aside>
 
@@ -33,17 +33,29 @@
     </header>
 
     <!-- RESULTS FORM -->
+    <!-- RESULTS FORM -->
     <section class="results-entry">
+
+      <!-- NEW CONTEXT SELECTORS -->
+      <div class="results-controls"
+        style="background:#fff; padding:20px; border-radius:10px; margin-bottom:20px; box-shadow:0 2px 10px rgba(0,0,0,0.05); display: flex; gap: 20px; align-items: center;">
+        <div class="control-group">
+          <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Academic Year</label>
+          <select id="selectYear" style="padding:10px; border-radius:5px; border:1px solid #ddd; min-width:150px;">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+        <div class="control-group">
+          <label style="display:block; font-size:12px; color:#666; margin-bottom:5px;">Term</label>
+          <select id="selectTerm" style="padding:10px; border-radius:5px; border:1px solid #ddd; min-width:150px;">
+            <!-- Populated by JS -->
+          </select>
+        </div>
+      </div>
+
       <table>
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>Mathematics</th>
-            <th>English</th>
-            <th>Science</th>
-            <th>Social Studies</th>
-            <th>Comments</th>
-          </tr>
+        <thead id="resultsTableHead">
+          <!-- Dynamic headers will be loaded here -->
         </thead>
         <tbody id="resultsTableBody">
           <!-- Dynamic rows will be loaded here -->
@@ -57,7 +69,15 @@
   </main>
 
 
-  <script src="/js/teacher-results.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/teacher-results.js"></script>
+  <script>
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+      localStorage.removeItem('adminToken');
+      localStorage.removeItem('user');
+    });
+  </script>
 </body>
 
 </html>

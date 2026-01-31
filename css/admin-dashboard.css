@@ -6,35 +6,55 @@ body {
   font-family: 'Poppins', sans-serif;
 }
 
-/* SIDEBAR */
+/* SIDEBAR ENHANCEMENTS */
 .admin-sidebar {
-  width: 220px;
-  background: #0a3d62;
+  width: 240px;
+  background: linear-gradient(180deg, #0a3d62 0%, #062b45 100%);
   color: #fff;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 25px 20px;
+  box-shadow: 4px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 10;
 }
 
 .admin-logo {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  margin-bottom: 30px;
+  margin-bottom: 40px;
+  letter-spacing: 0.5px;
+  text-align: center;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .admin-sidebar nav a {
-  color: #fff;
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
-  padding: 12px 10px;
+  padding: 14px 18px;
   margin-bottom: 8px;
-  display: block;
-  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-left: 4px solid transparent;
 }
 
-.admin-sidebar nav a.active,
 .admin-sidebar nav a:hover {
-  background: #fbc531;
-  color: #000;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  transform: translateX(4px);
+  padding-left: 22px;
+  /* Smooth shift */
+}
+
+.admin-sidebar nav a.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-left-color: #fbc531;
+  /* Accent color */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 /* MAIN CONTENT */
@@ -54,7 +74,7 @@ body {
   color: #555;
 }
 
-/* STATS CARDS */
+/* STATS CARDS ANIMATIONS */
 .stats-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -65,20 +85,50 @@ body {
 
 .stats-cards .card {
   background: #fff;
-  padding: 25px;
-  border-radius: 15px;
+  padding: 30px;
+  border-radius: 16px;
   text-align: center;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+  /* Softer shadow */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.03);
+  animation: fadeIn 0.6s ease-out backwards;
+}
+
+.stats-cards .card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.stats-cards .card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.stats-cards .card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.stats-cards .card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.stats-cards .card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
 }
 
 .stats-cards .card h3 {
-  margin-bottom: 15px;
-  color: #0a3d62;
+  margin-bottom: 10px;
+  color: #4a5568;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .stats-cards .card p {
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #0a3d62;
+  margin: 0;
 }
 
 /* ANNOUNCEMENTS PANEL */
@@ -332,7 +382,7 @@ body {
 }
 
 /* Teachers Section */
-/* Teachers Table */
+/* TABLE ANIMATIONS */
 .table-wrapper {
   overflow-x: auto;
   margin-top: 16px;
@@ -364,10 +414,16 @@ body {
 
 .teachers-table tbody tr {
   border-bottom: 1px solid #1e293b;
+  transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
 .teachers-table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.08);
+  background: rgba(37, 99, 235, 0.1);
+  transform: scale(1.005);
+  /* Micro scale */
+  z-index: 1;
+  position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 .teachers-table td {
@@ -876,4 +932,37 @@ body {
     margin: 20px;
     padding: 20px;
   }
+}
+
+/* LOGS TABLE */
+.logs-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.logs-table thead {
+  background: #34495e;
+  color: #fff;
+}
+
+.logs-table th,
+.logs-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+  color: #333;
+}
+
+.logs-table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+
+.logs-table tr:hover {
+  background-color: #f8f9fa;
 }

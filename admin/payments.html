@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tuition Payments | Admin</title>
-  <link rel="stylesheet" href="../CSS/admin-dashboard.css">
+  <link rel="stylesheet" href="../css/admin-dashboard.css">
 </head>
 
 <body>
@@ -17,10 +17,19 @@
 
   <!-- SIDEBAR (same as admin dashboard) -->
   <aside class="admin-sidebar">
-    <h2>Admin Panel</h2>
+    <div class="admin-logo">Admin Panel</div>
     <nav>
       <a href="dashboard.html">Dashboard</a>
-      <a href="payments.html" class="active">Tuition Payments</a>
+      <a href="dashboard.html#teachers">Teachers</a>
+      <a href="students.html">Students</a>
+      <a href="dashboard.html#announcement">Announcements</a>
+      <a href="payments.html" class="active">View Tuition Payments</a>
+      <a href="dashboard.html#admissions">Admissions</a>
+      <a href="dashboard.html#gallery-mgmt">🎨 Gallery</a>
+      <a href="dashboard.html#results-mgmt">📊 Results</a>
+      <a href="dashboard.html#reports">Reports</a>
+      <a href="dashboard.html#logs">System Logs</a>
+      <a href="../login.html" id="logoutBtn">Logout</a>
     </nav>
   </aside>
 
@@ -59,22 +68,22 @@
     <!-- MONTHLY PAYMENT SUMMARY -->
     <section class="payment-summary">
       <div class="summary-card">
-        <h3>ZMW 12,500</h3>
+        <h3>ZMW 0.00</h3>
         <p>Total Collected<br><span>This Month</span></p>
       </div>
 
       <div class="summary-card warning">
-        <h3>ZMW 4,500</h3>
+        <h3>ZMW 0.00</h3>
         <p>Outstanding<br><span>Balances</span></p>
       </div>
 
       <div class="summary-card success">
-        <h3>18</h3>
+        <h3>0</h3>
         <p>Fully Paid<br><span>Students</span></p>
       </div>
 
       <div class="summary-card danger">
-        <h3>7</h3>
+        <h3>0</h3>
         <p>Unpaid / Partial<br><span>Students</span></p>
       </div>
     </section>
@@ -84,9 +93,7 @@
       <input type="text" placeholder="Search student name">
       <select>
         <option>All Classes</option>
-        <option>Grade 1</option>
-        <option>Grade 2</option>
-        <option>Grade 3</option>
+        <!-- Dynamic -->
       </select>
       <select>
         <option>All Status</option>
@@ -155,7 +162,7 @@
               <th style="padding:10px; text-align:left;">Date</th>
               <th style="padding:10px; text-align:left;">Amount</th>
               <th style="padding:10px; text-align:left;">Method</th>
-              <th style="padding:10px; text-align:left;">Term</th>
+              <th style="padding:10px; text-align:left;">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -213,11 +220,18 @@
         cursor: pointer;
       }
     </style>
-
-    <p class="note">⚠️ UI only. Payment data is not connected to a database yet.</p>
   </main>
 
-  <script src="/js/admin-payments.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/admin-payments-fixed.js?v=4"></script>
+  <script>
+    document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.SchoolAuth.logout();
+    });
+  </script>
 </body>
 
 </html>
