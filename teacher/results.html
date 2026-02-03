@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Enter Results | K-Lombe School</title>
-  <link rel="stylesheet" href="../css/teacher-dashboard.css">
+  <link rel="stylesheet" href="../css/teacher-dashboard.css?v=6">
 </head>
 
 <body>
@@ -62,16 +62,29 @@
         </tbody>
       </table>
 
-      <button class="btn primary">Save Results</button>
+      <button class="btn primary" id="saveResultsBtn">Save Results</button>
       <button class="btn secondary" id="downloadBtn" style="margin-left: 10px; background-color: #28a745;">Download
         CSV</button>
+
+      <!-- Confirmation Modal -->
+      <input type="checkbox" id="confirmModal" class="modal-toggle">
+      <div class="modal" style="z-index: 9999;">
+        <div class="modal-content">
+          <h3 id="confirm-title">Confirm Action</h3>
+          <p id="confirm-msg">Are you sure?</p>
+          <div class="modal-actions">
+            <label for="confirmModal" class="btn cancel" id="confirm-cancel">Cancel</label>
+            <button type="button" class="btn save" id="confirm-yes">Confirm</button>
+          </div>
+        </div>
+      </div>
     </section>
   </main>
 
 
   <script src="../js/data.js"></script>
   <script src="../js/app.js"></script>
-  <script src="../js/teacher-results.js"></script>
+  <script src="../js/teacher-results.js?v=5"></script>
   <script>
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
       localStorage.removeItem('adminToken');

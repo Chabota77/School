@@ -29,6 +29,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 3. UI Initialization
     const updateProfile = () => {
         document.getElementById('studentName').textContent = student.name;
+        // Logic for ID: prefer rollNo, else computed
+        const displayId = student.rollNo || (2500000 + (parseInt(student.id.replace(/\D/g, '')) || 0));
+        document.getElementById('studentIdDisplay').textContent = displayId;
+
         // Sidebar Initials
         const initials = student.name.split(' ').map(n => n[0]).join('').substring(0, 2);
         document.querySelector('.avatar').textContent = initials;
@@ -153,4 +157,97 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Date
     document.getElementById('currentDate').textContent = new Date().toLocaleDateString();
+
+    // Download Logic (PDF)
+    const downloadBtn = document.getElementById('downloadResultsBtn');
+    if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+            const { jsPDF } = window.jspdf;
+            if (!jsPDF) {
+                alert("PDF Library not loaded. Please refresh.");
+                return;
+            }
+
+            const doc = new jsPDF();
+
+            // 1. Header Details
+            const studentName = document.getElementById('studentName').textContent.trim() || "Student";
+            const studentId = document.getElementById('studentIdDisplay') ? document.getElementById('studentIdDisplay').textContent : '';
+
+            const className = document.getElementById('studentClassDisplay').textContent;
+            const termName = document.getElementById('termSelect').options[document.getElementById('termSelect').selectedIndex]?.text || "Term";
+            const date = new Date().toLocaleDateString();
+
+            // Title
+            doc.setFontSize(18);
+            doc.text("K-Lombe School", 14, 20);
+            doc.setFontSize(14);
+            doc.text("Student Results Slip", 14, 30);
+
+            // Meta Data
+            doc.setFontSize(11);
+            doc.text(`Name: ${studentName}`, 14, 40);
+            doc.text(`ID: ${studentId}`, 150, 46); // Add ID to PDF
+
+            doc.text(`Class: ${className}`, 14, 46);
+            doc.text(`Term: ${termName}`, 14, 52);
+            doc.text(`Date: ${date}`, 150, 40);
+
+            // 2. Table Data
+            const table = document.querySelector('.results-table');
+            const rows = Array.from(table.querySelectorAll('tbody tr'));
+
+            if (rows.length === 0 || rows[0].innerText.includes('No results')) {
+                alert("No results to download.");
+                return;
+            }
+
+            const tableData = rows.map(row => {
+                const cols = row.querySelectorAll('td');
+                return [
+                    cols[0].innerText.trim(), // Subject
+                    cols[1].innerText.trim(), // Score
+                    cols[2].innerText.trim(), // Grade
+                    cols[3].innerText.trim()  // Status
+                ];
+            });
+
+            // 3. AutoTable
+            doc.autoTable({
+                startY: 60,
+                head: [['Subject', 'Score', 'Grade', 'Status']],
+                body: tableData,
+                theme: 'striped',
+                headStyles: { fillColor: [44, 62, 80] },
+            });
+
+            // 4. Footer
+            const finalY = doc.lastAutoTable.finalY || 60;
+            doc.setFontSize(10);
+            doc.text("This document is system generated.", 14, finalY + 10);
+
+            // Save Method (Robust)
+            const safeName = studentName.replace(/[^a-z0-9]/gi, '_');
+            const filename = `Results-${safeName}-${termName}.pdf`;
+
+            try {
+                doc.save(filename); // Try native save first (usually most reliable)
+            } catch (e) {
+                console.error("Native save failed, trying blob method", e);
+                // Fallback
+                const pdfBlob = doc.output('blob');
+                const url = URL.createObjectURL(pdfBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename; // Property assignment
+                document.body.appendChild(link); // Required for Firefox
+                link.click();
+
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 5000); // 5 seconds
+            }
+        });
+    }
 });

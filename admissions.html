@@ -56,44 +56,32 @@
   </section>
 
   <!-- ADMISSION FORM -->
-  <section class="admission-form-section" style="padding: 50px 20px; background: #fff;">
-    <div
-      style="max-width: 600px; margin: 0 auto; background: #f9f9f9; padding: 30px; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.1);">
-      <h2 style="text-align: center; margin-bottom: 20px; color: #0a3d62;">Online Admission Form</h2>
-      <form id="admissionForm">
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Student Full Name</label>
-          <input type="text" id="student_name" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        </div>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Age</label>
-          <input type="number" id="age" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        </div>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Class Applied For</label>
-          <select id="class_applied_id" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+  <section class="contact-section">
+      <div class="contact-form" style="max-width: 700px; margin: 0 auto; float: none;">
+        <h2 style="text-align: center;">Online Admission Form</h2>
+        <form id="admissionForm">
+          <label for="student_name">Student Full Name</label>
+          <input type="text" id="student_name" placeholder="Enter student's name" required>
+
+          <label for="age">Age</label>
+          <input type="number" id="age" placeholder="Enter age" required>
+
+          <label for="class_applied_id">Class Applied For</label>
+          <select id="class_applied_id" required>
             <option value="">Select Class</option>
             <!-- Dynamic classes -->
           </select>
-        </div>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Parent / Guardian Name</label>
-          <input type="text" id="parent_name" required
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        </div>
-        <div style="margin-bottom: 15px;">
-          <label style="display: block; margin-bottom: 5px;">Phone Number</label>
-          <input type="tel" id="phone" required placeholder="+260..."
-            style="width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
-        </div>
-        <button type="submit" class="btn primary" style="width: 100%; padding: 12px; font-size: 16px;">Submit
-          Application</button>
-      </form>
-      <p id="formMessage" style="margin-top: 15px; text-align: center;"></p>
-    </div>
+
+          <label for="parent_name">Parent / Guardian Name</label>
+          <input type="text" id="parent_name" placeholder="Enter parent's name" required>
+
+          <label for="phone">Phone Number</label>
+          <input type="tel" id="phone" placeholder="+260..." required>
+
+          <button type="submit" class="btn primary">Submit Application</button>
+        </form>
+        <p id="formMessage" class="login-note"></p>
+      </div>
   </section>
 
   <!-- ADMISSION INTRO -->

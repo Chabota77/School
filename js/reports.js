@@ -28,19 +28,33 @@ window.SchoolReports = {
     },
 
     exportData: (type) => {
-        // Mock Export
-        window.SchoolUtils.showToast(`Exporting ${type} report...`);
-        window.SchoolUtils.logAction('Export', `Downloaded ${type} report`);
+        const students = window.SchoolData.getCollection('students');
+        const teachers = window.SchoolData.getCollection('teachers');
+        const admissions = window.SchoolData.getCollection('admissions');
 
-        setTimeout(() => {
-            const blob = new Blob(["Mock CSV Content\nID,Name,Score"], { type: 'text/csv' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `school_report_${Date.now()}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-        }, 1000);
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "Category,Count\n";
+        csvContent += `Total Students,${students.length}\n`;
+        csvContent += `Total Teachers,${teachers.length}\n`;
+        csvContent += `Pending Admissions,${admissions.filter(a => a.status === 'Pending').length}\n`;
+
+        // Add breakdown by class
+        csvContent += "\nClass,Student Count\n";
+        const classes = window.SchoolData.getClasses();
+        classes.forEach(c => {
+            const count = students.filter(s => s.classId === c.id).length;
+            csvContent += `${c.name},${count}\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `school_summary_report_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        window.SchoolUtils.showToast('Export successful!', 'success');
+        window.SchoolUtils.logAction('Export', `Downloaded ${type} report`);
     }
 };

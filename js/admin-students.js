@@ -30,7 +30,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load students
     const loadStudents = () => {
-        const students = SchoolData.getCollection('students');
+        let students = SchoolData.getCollection('students');
+
+        // BACKFILL: Assign Roll No if missing
+        let maxRoll = students.reduce((max, s) => Math.max(max, s.rollNo || 0), 2500000);
+        let updated = false;
+
+        students.forEach(s => {
+            if (!s.rollNo) {
+                maxRoll++;
+                s.rollNo = maxRoll;
+                SchoolData.updateItem('students', s.id, { rollNo: maxRoll });
+                updated = true;
+            }
+        });
+
+        if (updated) {
+            students = SchoolData.getCollection('students'); // Refresh
+        }
+
         // Join with class names
         allStudentsData = students.map(s => {
             const cls = classes.find(c => c.id === s.classId);
@@ -50,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         studentsList.innerHTML = data.map(s => `
             <tr>
-                <td>${2500000 + (s.rollNo || 0)}</td>
+                <td>${s.rollNo || '-'}</td>
                 <td>${s.name}</td>
                 <td>${s.gender || '-'}</td>
                 <td>${s.age || '-'}</td>
