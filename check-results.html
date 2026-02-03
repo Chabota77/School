@@ -27,27 +27,39 @@
   <main class="results-page">
     <section class="results-intro">
       <h1>Check Your Results</h1>
-      <p>Enter your name and select the term to view your academic results.</p>
+      <p>Enter your name OR student ID and select the term to view your academic results.</p>
     </section>
 
     <!-- RESULTS FORM -->
     <section class="results-form">
       <form id="resultsForm">
-        <input type="text" id="studentId" placeholder="Student ID (e.g. 2500001)" required>
-        <input type="text" id="studentName" placeholder="Full Name (e.g. John Banda)" required>
-        <select id="termSelect" required>
-          <option value="" disabled selected>Select Term</option>
-          <option>Term 1</option>
-          <option>Term 2</option>
-          <option>Term 3</option>
-        </select>
-        <button type="submit" class="btn primary">Check Results</button>
+        <div class="form-group">
+          <label for="studentId" style="display:block; margin-bottom:5px; color:#333; font-weight:600;">Student
+            ID</label>
+          <input type="text" id="studentId" placeholder="e.g. 2500001">
+        </div>
+        <div class="form-group">
+          <label for="studentName" style="display:block; margin-bottom:5px; color:#333; font-weight:600;">Student
+            Name</label>
+          <input type="text" id="studentName" placeholder="e.g. John Banda">
+        </div>
+        <div class="form-group">
+          <label for="termSelect" style="display:block; margin-bottom:5px; color:#333; font-weight:600;">Academic
+            Term</label>
+          <select id="termSelect" required>
+            <option value="" disabled selected>Select Term</option>
+            <option>Term 1</option>
+            <option>Term 2</option>
+            <option>Term 3</option>
+          </select>
+        </div>
+        <button type="submit" class="btn primary" style="width:100%">Check Results</button>
       </form>
     </section>
 
     <!-- MOCK RESULTS TABLE -->
     <section class="results-display">
-      <h2>Results</h2>
+      <h2>Academic Performance</h2>
       <table>
         <thead>
           <tr>
@@ -60,9 +72,11 @@
           <!-- Dynamic results -->
         </tbody>
       </table>
-      <p class="note" id="statusMessage"></p>
+      <div id="statusMessage" class="note" style="text-align:center; font-style:italic; color:#666;"></div>
       <button class="btn secondary" id="downloadResultsBtn"
-        style="display:none; margin-top: 15px; background-color: #28a745; color: white;">Download PDF/CSV</button>
+        style="display:none; margin-top: 20px; width:100%; justify-content:center;">
+        <span style="font-size:1.2em">⬇</span> Download Result Slip
+      </button>
     </section>
   </main>
 

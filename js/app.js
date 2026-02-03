@@ -27,117 +27,70 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Public Check Results Logic (Backend Integration)
+    // 3. Public Check Results Logic (Legacy/Public Access)
     if (path.includes('check-results.html')) {
         const resultsForm = document.getElementById('resultsForm');
         if (resultsForm) {
-            resultsForm.addEventListener('submit', async (e) => {
+            resultsForm.addEventListener('submit', (e) => {
                 e.preventDefault();
 
-                const studentId = document.getElementById('studentId').value.trim();
-                const name = document.getElementById('studentName').value.trim();
-                const term = document.getElementById('termSelect').value;
+                const nameInput = document.getElementById('studentName');
+                const idInput = document.getElementById('studentId');
+                const termSelect = document.getElementById('termSelect');
                 const resultsSection = document.querySelector('.results-display');
                 const resultsBody = document.getElementById('resultsTableBody');
-                const statusMessage = document.getElementById('statusMessage');
 
-                if (!studentId || !name || !term) {
-                    if (window.SchoolUtils) window.SchoolUtils.showToast('Please fill in all fields', 'error');
-                    else alert('Please fill in all fields');
+                const name = nameInput.value.trim().toLowerCase();
+                const studentId = idInput.value.trim();
+                const termName = termSelect.value; // "Term 1"
+
+                if ((!name && !studentId) || !termName) {
+                    window.SchoolUtils.showToast('Enter name/ID and select term', 'error');
                     return;
                 }
 
-                const btn = resultsForm.querySelector('button');
-                const originalText = btn.textContent;
-                btn.textContent = 'Checking...';
-                btn.disabled = true;
-                resultsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Searching...</td></tr>';
-                resultsSection.style.display = 'block';
+                const db = window.SchoolData.getDB();
+                let student = null;
 
-                try {
-                    // LocalStorage Fix for Check Results
-                    const db = window.SchoolData.getDB();
-                    const students = db.students || [];
+                // 1. Check Publication Status First
+                const termId = termName.replace('Term ', 'T');
+                // Assuming Year is 2026 for now, or we could fetch current year from data
+                // Ideally: const year = document.getElementById('yearSelect').value || '2026';
+                const year = '2026';
 
-                    // 1. Find Student Debugging
-                    console.log(`Searching for: Roll=${studentId}, Name=${name.toLowerCase()}`);
-                    console.log(`Total Students in DB: ${students.length}`);
+                if (!window.SchoolData.isPublished(year, termId)) {
+                    window.SchoolUtils.showToast(`Results for ${termName} ${year} have not been released yet.`, 'error');
+                    resultsSection.style.display = 'none';
+                    return;
+                }
 
-                    const student = students.find(s => {
-                        // Normalize DB ID (e.g. "S001" -> 1, or "2500001" -> 1 if needed, but best to stick to raw ID)
-                        // Our system seems to store "id": "1", "rollNo": "2500001"
+                if (studentId) {
+                    student = db.students.find(s => s.id == studentId);
+                } else if (name) {
+                    student = db.students.find(s => s.name.toLowerCase().includes(name));
+                }
 
-                        const rawId = s.id;
-                        const dbRoll = s.rollNo || (2500000 + parseInt(rawId) || 0).toString();
+                if (student) {
+                    const termId = termName.replace('Term ', 'T');
+                    const results = window.SchoolData.getStudentResults(student.id, termId);
 
-                        // Normalize Input
-                        const inputId = studentId.toString().trim();
-
-                        // Check match on either ID, RollNo, or Constructed RollNo
-                        const idMatch = (rawId == inputId) || (dbRoll == inputId);
-
-                        const nameMatch = s.name.toLowerCase().includes(name.toLowerCase());
-
-                        return idMatch && nameMatch;
-                    });
-
-                    if (student) {
-                        // 2. Check if Published
-                        // Map "Term 1" -> "T1" logic
-                        const termId = term.includes('Term') ? term.replace('Term ', 'T') : term;
-                        const currentYear = '2026';
-
-                        const isPublished = window.SchoolData.isPublished(currentYear, termId);
-
-                        if (!isPublished) {
-                            resultsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Results not yet published for this term.</td></tr>';
-                            statusMessage.innerHTML = `<span style="color:orange;">Results are not yet available.</span>`;
-                            if (window.SchoolUtils) window.SchoolUtils.showToast('Results not published', 'warning');
-                        } else {
-                            // 3. Get Results
-                            // Use the normalized termId
-                            const results = window.SchoolData.getStudentResults(student.id, termId);
-
-                            if (Object.keys(results).length > 0) {
-                                resultsBody.innerHTML = '';
-                                Object.entries(results).forEach(([subject, score]) => {
-                                    resultsBody.innerHTML += `
-                                        <tr>
-                                            <td>${subject}</td>
-                                            <td>${score}</td>
-                                            <td>${getGrade(score)}</td>
-                                        </tr>
-                                    `;
-                                });
-                                statusMessage.innerHTML = `<span style="color:green;">Results found for ${name} (${term}).</span>`;
-                                if (window.SchoolUtils) window.SchoolUtils.showToast('Results found!', 'success');
-                            } else {
-                                resultsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No grades recorded.</td></tr>';
-                                statusMessage.innerHTML = `<span style="color:orange;">No grades found.</span>`;
-                            }
-                        }
+                    if (Object.keys(results).length > 0) {
+                        window.SchoolUtils.showToast('Results found', 'success');
+                        resultsSection.style.display = 'block';
+                        resultsBody.innerHTML = '';
+                        Object.entries(results).forEach(([sub, score]) => {
+                            resultsBody.innerHTML += `<tr><td>${sub}</td><td>${score}</td></tr>`;
+                        });
                     } else {
-                        resultsBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No student found.</td></tr>';
-                        statusMessage.innerHTML = `<span style="color:red;">No results found. Please check your details.</span>`;
-                        if (window.SchoolUtils) window.SchoolUtils.showToast('No results found', 'error');
+                        window.SchoolUtils.showToast('No results for this term', 'error');
+                        resultsSection.style.display = 'none';
                     }
-                } catch (err) {
-                    console.error(err);
-                    resultsBody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:red;">Error loading results.</td></tr>';
-                } finally {
-                    btn.textContent = originalText;
-                    btn.disabled = false;
+                } else {
+                    window.SchoolUtils.showToast('Student not found', 'error');
+                    resultsSection.style.display = 'none';
                 }
             });
         }
-    }
-
-    function getGrade(marks) {
-        if (marks >= 80) return 'A (Distinction)';
-        if (marks >= 70) return 'B (Merit)';
-        if (marks >= 60) return 'C (Credit)';
-        if (marks >= 50) return 'D (Pass)';
-        return 'F (Fail)';
     }
 
     // 4. Attach Global Logout Listeners (if any generic ones exist)

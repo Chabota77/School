@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         studentsList.innerHTML = data.map(s => `
             <tr>
-                <td>${2500000 + (s.rollNo || 0)}</td>
+                <td>${s.rollNo || s.id}</td>
                 <td>${s.name}</td>
                 <td>${s.gender || '-'}</td>
                 <td>${s.age || '-'}</td>
@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filtered = allStudentsData.filter(s => {
             const matchesClass = classFilter ? s.class_name === classFilter : true;
-            const rollNo = (2500000 + (s.rollNo || 0)).toString();
+            const rollNo = (s.rollNo || s.id).toString();
             const matchesSearch = s.name.toLowerCase().includes(searchTerm) || rollNo.includes(searchTerm);
             return matchesClass && matchesSearch;
         });
@@ -113,14 +113,14 @@ document.addEventListener('DOMContentLoaded', () => {
             age: document.getElementById('student-age').value,
             gender: document.getElementById('student-gender').value,
             classId: document.getElementById('student-class').value,
-            status: document.getElementById('student-status').value,
-            rollNo: id ? undefined : Math.floor(Math.random() * 1000) // Mock roll no gen
+            status: document.getElementById('student-status').value
         };
 
         if (id) {
             SchoolData.updateItem('students', id, studentData);
         } else {
-            SchoolData.addItem('students', studentData);
+            // Use Auto-ID Generation
+            SchoolData.addStudent(studentData);
         }
 
         modalToggle.checked = false;

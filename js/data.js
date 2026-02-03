@@ -31,7 +31,7 @@ const DEFAULT_DATA = {
     users: [
         { id: 'U1', username: 'admin', password: 'password', role: 'admin', name: 'Admin User' },
         { id: 'U2', username: 'teacher', password: 'password', role: 'teacher', name: 'Teacher User', relatedId: 'T001' },
-        { id: 'U3', username: 'student', password: 'password', role: 'student', name: 'Student User', relatedId: 'S001' }
+        { id: 'U3', username: 'student', password: 'password', role: 'student', name: 'Student User', relatedId: '2600001' }
     ],
     teachers: [
         { id: 'T001', userId: 'U2', name: 'Mr. John Banda', subjectIds: ['MATH'], classIds: ['C7A'], status: 'Active', email: 'john.banda@school.com', phone: '+260977123456' },
@@ -39,9 +39,9 @@ const DEFAULT_DATA = {
         { id: 'T003', userId: null, name: 'Mrs. Grace Phiri', subjectIds: ['SCI'], classIds: ['C8A'], status: 'Active', email: 'grace.phiri@school.com', phone: '+260955987654' }
     ],
     students: [
-        { id: 'S001', userId: 'U3', name: 'John Doe', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Doe', phone: '0977000000' },
-        { id: 'S002', userId: null, name: 'Jane Smith', classId: 'C7A', status: 'Enrolled', guardian: 'Mrs. Smith', phone: '0977000001' },
-        { id: 'S003', userId: null, name: 'Michael Banda', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Banda', phone: '0977000002' }
+        { id: '2600001', userId: 'U3', name: 'John Doe', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Doe', phone: '0977000000', rollNo: '2600001' },
+        { id: '2600002', userId: null, name: 'Jane Smith', classId: 'C7A', status: 'Enrolled', guardian: 'Mrs. Smith', phone: '0977000001', rollNo: '2600002' },
+        { id: '2600003', userId: null, name: 'Michael Banda', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Banda', phone: '0977000002', rollNo: '2600003' }
     ],
 
     // relationships
@@ -51,50 +51,79 @@ const DEFAULT_DATA = {
     ],
     results: [
         // Normalized Results: Student + Subject + Term = Score
-        { id: 'R1', studentId: 'S001', subjectId: 'MATH', termId: 'T1', score: 85, yearId: '2026' },
-        { id: 'R2', studentId: 'S001', subjectId: 'ENG', termId: 'T1', score: 78, yearId: '2026' },
-        { id: 'R3', studentId: 'S001', subjectId: 'SCI', termId: 'T1', score: 92, yearId: '2026' },
-        { id: 'R4', studentId: 'S001', subjectId: 'SOC', termId: 'T1', score: 88, yearId: '2026' },
+        { id: 'R1', studentId: '2600001', subjectId: 'MATH', termId: 'T1', score: 85, yearId: '2026' },
+        { id: 'R2', studentId: '2600001', subjectId: 'ENG', termId: 'T1', score: 78, yearId: '2026' },
+        { id: 'R3', studentId: '2600001', subjectId: 'SCI', termId: 'T1', score: 92, yearId: '2026' },
+        { id: 'R4', studentId: '2600001', subjectId: 'SOC', termId: 'T1', score: 88, yearId: '2026' },
 
-        { id: 'R5', studentId: 'S002', subjectId: 'MATH', termId: 'T1', score: 90, yearId: '2026' },
-        { id: 'R6', studentId: 'S002', subjectId: 'ENG', termId: 'T1', score: 85, yearId: '2026' },
-
-        { id: 'R7', studentId: 'S003', subjectId: 'MATH', termId: 'T1', score: 75, yearId: '2026' }
+        { id: 'R5', studentId: '2600002', subjectId: 'MATH', termId: 'T1', score: 90, yearId: '2026' },
+        { id: 'R6', studentId: '2600002', subjectId: 'ENG', termId: 'T1', score: 85, yearId: '2026' },
     ],
 
     announcements: [
-        { id: 1, title: 'School Reopens', content: 'School reopens on 10th January for all learners.', audience: 'Everyone', date: '2026-01-05' },
-        { id: 2, title: 'Sports Day', content: 'Annual inter-house sports competition coming soon.', audience: 'Everyone', date: '2026-02-15' },
-        { id: 3, title: 'Parents Meeting', content: 'Parents–Teachers meeting scheduled for next Friday.', audience: 'Parents', date: '2026-03-01' }
+        { id: 1, title: 'School Reopens', content: 'School reopens on 10th January for all learners.', date: '2026-01-05', audience: 'Everyone' },
+        { id: 2, title: 'Sports Day', content: 'Annual inter-house sports competition coming soon.', date: '2026-02-15', audience: 'Everyone' }
     ],
-    admissions: [
-        { id: 1, student_name: 'David Zulu', class_name: 'Grade 7', date_applied: '2026-01-15', parent_name: 'Mary Zulu', phone: '0977111222', status: 'Pending', email: 'david@zulu.com' },
-        { id: 2, student_name: 'Sarah Lungu', class_name: 'Grade 8', date_applied: '2026-01-18', parent_name: 'Peter Lungu', phone: '0966333444', status: 'Pending', email: 'sarah@lungu.com' }
-    ],
+    admissions: [], // Pending admissions
     publishedResults: [], // Stores strings like "2026-T1"
     galleryImages: [
-        { id: 1, url: 'https://images.unsplash.com/photo-1588072432836-e10032774350', caption: 'Learning Through Play', category: 'Classroom' },
-        { id: 2, url: 'https://images.unsplash.com/photo-1596495577886-d920f1fb7238', caption: 'Creative Arts & Crafts', category: 'Arts' },
-        { id: 3, url: 'https://images.unsplash.com/photo-1606312619070-d48b4c652a52', caption: 'Sports & Teamwork', category: 'Sports' },
-        { id: 4, url: 'https://images.unsplash.com/photo-1607746882042-944635dfe10e', caption: 'School Assemblies & Events', category: 'Events' }
+        { id: 1, url: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80', caption: 'Graduation Day 2025', category: 'Events' },
+        { id: 2, url: 'https://images.unsplash.com/photo-1544531586-fde5298cdd40?w=500&q=80', caption: 'Science Fair', category: 'Academic' }
     ],
-    payments: []
+    payments: [],
+    tuitionPayments: [], // { id, studentId, amount, date, termId, status }
 };
 
 // --- CORE FUNCTIONS ---
 
 function initData() {
-    if (!localStorage.getItem('bf_school_data')) {
+    const stored = localStorage.getItem('bf_school_data');
+    if (!stored) {
         localStorage.setItem('bf_school_data', JSON.stringify(DEFAULT_DATA));
         console.log('Database initialized with normalized data.');
     } else {
-        // Optional: Simple migration check could go here
-        // For now, we assume if it exists, it's valid, OR the user clears it.
-        // To be safe during dev, if we detect old schema (e.g. students have 'grade' string instead of classId), we could wipe it.
-        const db = JSON.parse(localStorage.getItem('bf_school_data'));
-        if (db.students && db.students.length > 0 && !db.classes) {
-            console.warn('Old schema detected. Resetting to new schema...');
+        const db = JSON.parse(stored);
+
+        // Strict Schema Check: Ensure critical collections exist AND are populated
+        const requiredKeys = ['academicYears', 'terms', 'classes', 'students', 'publishedResults'];
+        const isCorrupt = requiredKeys.some(key => !db[key]); // Check existence
+        const isEmpty = (db.academicYears && db.academicYears.length === 0) || (db.terms && db.terms.length === 0);
+
+        // MIGRATION: Fix Student IDs (Migration for "2500000" or "S001" to "260000X")
+        if (db.students && db.students.some(s => s.id === '2500000' || s.id.startsWith('S'))) {
+            console.warn('Old/Bad Student IDs detected. Migrating to YYXXXXX format...');
+
+            // Loop and re-assign IDs
+            const year = '26'; // Defaulting migration to 2026
+            let counter = 1;
+
+            const idMap = {}; // Map old ID to new ID to fix foreign keys
+
+            db.students.forEach(s => {
+                const newId = `${year}${String(counter).padStart(5, '0')}`;
+                idMap[s.id] = newId;
+                s.id = newId;
+                s.rollNo = newId;
+                counter++;
+            });
+
+            // Update Foreign Keys (Results, Users, Payments)
+            if (db.results) db.results.forEach(r => { if (idMap[r.studentId]) r.studentId = idMap[r.studentId]; });
+            if (db.users) db.users.forEach(u => { if (idMap[u.relatedId]) u.relatedId = idMap[u.relatedId]; });
+            if (db.tuitionPayments) db.tuitionPayments.forEach(p => { if (idMap[p.studentId]) p.studentId = idMap[p.studentId]; });
+
+            // Should save immediately
+            localStorage.setItem('bf_school_data', JSON.stringify(db));
+            console.log('Migration Complete. IDs fixed.');
+            window.location.reload();
+            return; // Stop here, reload triggers
+        }
+
+
+        if (isCorrupt || isEmpty) {
+            console.warn('Corrupt (missing keys) or Empty data detected. Factory Resetting...');
             localStorage.setItem('bf_school_data', JSON.stringify(DEFAULT_DATA));
+            window.location.reload();
         }
     }
 }
@@ -194,6 +223,68 @@ const SchoolData = {
     isPublished: (year, term) => {
         const db = getDB();
         return (db.publishedResults || []).includes(`${year}-${term}`);
+    },
+
+    // Student ID Logic
+    generateStudentId: (yearInput) => {
+        const db = getDB();
+
+        // Determine Year (YY)
+        let yearFull;
+        if (yearInput) {
+            yearFull = String(yearInput);
+        } else {
+            // Default to current academic year or system year
+            const currentYearObj = db.academicYears.find(y => y.current);
+            yearFull = currentYearObj ? currentYearObj.name : new Date().getFullYear().toString();
+        }
+
+        const yy = yearFull.slice(-2); // "26" for 2026
+
+        // Find max sequence for this year
+        // We filter students whose ID starts with "S" + "YY" wait...
+        // Format requested is YYXXXXX (e.g. 2600001). 
+        // Our existing IDs are like "S001".
+        // The user wants "student number the student roll number".
+        // Let's use the new format as the actual ID if possible, or store it as 'studentNumber' and keep internal ID.
+        // But user said "make the student number the student roll number".
+        // Existing system uses IDs like "S001" for relationships. Changing strict ID format might break existing relationships if not careful.
+        // However, for *new* students, we can just use the new format as the ID string.
+        // e.g. ID = "2600001".
+
+        // Let's iterate all students to find matching YY prefix
+        const students = db.students || [];
+
+        // Filter those mimicking the pattern ^YY\d{5}$
+        const pattern = new RegExp(`^${yy}\\d{5}$`);
+        const matchingIds = students
+            .filter(s => pattern.test(s.id))
+            .map(s => parseInt(s.id.slice(2))); // Get the XXXXX part
+
+        let nextSeq = 1;
+        if (matchingIds.length > 0) {
+            nextSeq = Math.max(...matchingIds) + 1;
+        }
+
+        const nextId = `${yy}${String(nextSeq).padStart(5, '0')}`;
+        return nextId;
+    },
+
+    addStudent: (studentData) => {
+        const db = getDB();
+
+        // Generate Auto ID
+        const newId = SchoolData.generateStudentId();
+
+        // Use this as the primary ID
+        studentData.id = newId;
+        studentData.rollNo = newId; // Redundant but requested "student number is roll number"
+
+        // Add to collection
+        if (!db.students) db.students = [];
+        db.students.push(studentData);
+        saveDB(db);
+        return studentData;
     },
 
     // Gallery

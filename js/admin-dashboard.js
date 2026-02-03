@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const { SchoolData } = window;
+
     let allTeachers = []; // Store for filtering
     let allAdmissions = []; // Store for filtering
 
@@ -124,12 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${a.status === 'Pending' ? `
                     <button class="btn accept" onclick="updateAdmission('${a.id}', 'Approved')">Accept</button>
                     <button class="btn reject" onclick="updateAdmission('${a.id}', 'Rejected')">Reject</button>
-                    ` : (a.status === 'Approved' ? `
-                        <span style="font-weight:bold; color:green; display:block; margin-bottom:5px;">Approved</span>
-                        <button class="btn secondary" onclick="downloadAdmissionLetter('${a.id}')" style="font-size:0.8em; padding:5px 10px; background-color: #2b6cb0; color: white; border: none;">Download Letter</button>
-                    ` : `
-                        <span style="font-weight:bold; color:${a.status === 'Rejected' ? 'red' : '#666'}">${a.status}</span>
-                    `)}
+                    ` : `<span>${a.status}</span>`}
                 </td>
             `;
             tbody.appendChild(tr);
@@ -138,10 +134,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadAnnouncements = () => {
         const announcements = SchoolData.getCollection('announcements');
-        const list = document.getElementById('announcement');
+        const section = document.getElementById('announcement');
+        if (!section) return;
+
+        const list = section.querySelector('.announcement-list');
         if (!list) return;
 
-        // Keep header
+        // Reset list content, keep the form which is a sibling
         list.innerHTML = '<h3>Recent Announcements</h3>';
 
         announcements.forEach(a => {
@@ -172,133 +171,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Helper: Download Acceptance Letter
-    window.downloadAdmissionLetter = (id) => {
+    window.updateAdmission = (id, status) => {
+        // Find admission
         const admissions = SchoolData.getCollection('admissions');
         const adm = admissions.find(a => a.id == id);
-        if (!adm) {
-            alert("Admission record not found.");
-            return;
-        }
+        if (adm) {
+            adm.status = status;
+            SchoolData.saveDB(SchoolData.getDB()); // persist
+            loadAdmissions();
+            loadStats();
 
-        if (!window.jspdf) {
-            alert("PDF Generator not loaded. Please refresh.");
-            return;
-        }
-
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-
-        // Header
-        doc.setFontSize(22);
-        doc.setTextColor(10, 61, 98); // Blue
-        doc.text("K-Lombe School", 105, 20, null, null, "center");
-
-        doc.setFontSize(12);
-        doc.setTextColor(0);
-        doc.text("Address: P.O. Box 12345, Lusaka, Zambia", 105, 30, null, null, "center");
-        doc.text("Email: admissions@k-lombeschool.com", 105, 36, null, null, "center");
-
-        doc.setLineWidth(0.5);
-        doc.line(20, 42, 190, 42);
-
-        // Body
-        doc.setFontSize(16);
-        doc.setFont(undefined, 'bold');
-        doc.text("OFFICIAL ADMISSION LETTER", 105, 55, null, null, "center");
-
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
-        const today = new Date().toLocaleDateString();
-        doc.text(`Date: ${today}`, 20, 65);
-
-        doc.text(`Dear Parent/Guardian of ${adm.student_name},`, 20, 80);
-
-        // Retrieve generic password or actual if stored
-        const username = adm.student_name.toLowerCase().replace(/\s+/g, '');
-
-        const text = `We are pleased to inform you that your child's application for admission into ${adm.class_name} at K-Lombe School has been SUCCESSFUL for the 2026 Academic Year.\n\nYour child has been allocated specific Login Credentials to access the Student Portal:\n\nUsername: ${username}\nPassword: password\n\nPlease ensure you pay the school fees before the term begins to secure this place. We look forward to welcoming you to our family.`;
-
-        const splitText = doc.splitTextToSize(text, 170);
-        doc.text(splitText, 20, 90);
-
-        // Signature
-        doc.text("Sincerely,", 20, 160);
-        doc.text("Admin Admissions", 20, 170);
-        doc.text("K-Lombe School Management", 20, 175);
-
-        // Download
-        doc.save(`Acceptance_${adm.student_name.replace(/ /g, '_')}.pdf`);
-    };
-
-    window.updateAdmission = (id, status) => {
-        // 1. Initial Check (Read-only)
-        const allAdmissions = SchoolData.getCollection('admissions');
-        const existingAdm = allAdmissions.find(a => a.id == id);
-
-        if (!existingAdm) return;
-        if (existingAdm.status !== 'Pending') {
-            alert('This admission record is already processed.');
-            return;
-        }
-
-        // 2. Perform Update & Persist
-        const adm = SchoolData.updateItem('admissions', id, { status: status });
-
-        // UI UPDATE: Replace buttons with Status AND Button
-        const btnFn = document.querySelector(`button[onclick*="updateAdmission('${id}', 'Approved')"]`);
-        if (btnFn) {
-            const td = btnFn.parentElement;
+            // If approved, create Student AND User Account
             if (status === 'Approved') {
-                td.innerHTML = `
-                    <span style="font-weight:bold; color:green; display:block; margin-bottom:5px;">Approved</span>
-                    <button class="btn secondary" onclick="downloadAdmissionLetter('${id}')" style="font-size:0.8em; padding:5px 10px; background-color: #2b6cb0; color: white; border: none;">Download Letter</button>
-                `;
-            } else {
-                td.innerHTML = `<span style="font-weight:bold; color:red;">Rejected</span>`;
+                // 1. Resolve Class ID (Simplified Mapping)
+                const classes = SchoolData.getClasses();
+                const cls = classes.find(c => c.name === adm.class_name) || classes[0];
+
+                // 2. Create User
+                const newUser = {
+                    username: adm.student_name.toLowerCase().replace(/\s+/g, ''),
+                    password: 'password', // Default
+                    role: 'student',
+                    name: adm.student_name
+                };
+                const createdUser = SchoolData.addItem('users', newUser);
+
+                // 3. Create Student linked to User
+                // Use new Auto-ID logic
+                SchoolData.addStudent({
+                    userId: createdUser.id, // LINKED
+                    name: adm.student_name,
+                    classId: cls.id,
+                    status: 'Enrolled',
+                    guardian: adm.parent_name,
+                    phone: adm.phone,
+                    email: adm.email
+                });
+
+                alert(`Student enrolled! Login: ${newUser.username} / password`);
             }
         }
-
-        // Processing Logic
-        if (status === 'Approved') {
-            // 1. Resolve Class
-            const classes = SchoolData.getClasses();
-            const cls = classes.find(c => c.name === adm.class_name) || classes[0];
-
-            // 2. Create User
-            const newUser = {
-                username: adm.student_name.toLowerCase().replace(/\s+/g, ''),
-                password: 'password', // Default
-                role: 'student',
-                name: adm.student_name
-            };
-            const createdUser = SchoolData.addItem('users', newUser);
-
-            // 3. Create Student linked to User
-            const allStudents = SchoolData.getCollection('students');
-            const maxRoll = allStudents.reduce((max, s) => Math.max(max, s.rollNo || 0), 2500000);
-            const nextRollNo = maxRoll + 1;
-
-            SchoolData.addItem('students', {
-                userId: createdUser.id, // LINKED
-                name: adm.student_name,
-                classId: cls.id,
-                status: 'Enrolled',
-                guardian: adm.parent_name,
-                phone: adm.phone,
-                email: adm.email,
-                rollNo: nextRollNo
-            });
-
-            // 4. Auto-Download Letter
-            window.downloadAdmissionLetter(id);
-
-            if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
-        } else {
-            if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Rejected', 'info');
-        }
-
-        loadStats();
     };
 
     window.deleteAnnouncement = (id) => {
@@ -349,90 +261,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const inputs = form.querySelectorAll('input');
             const selects = form.querySelectorAll('select');
 
-            const name = inputs[0].value;
-            const email = inputs[1].value;
-            const password = inputs[2].value; // validation needed?
-            const phone = inputs[3].value;
-
-            if (!email || !name) {
-                alert('Name and Email are required.');
-                return;
-            }
-
-            // 1. Manage User Account (Login)
-            let userId = null;
-            const users = SchoolData.getCollection('users');
-
-            // Search for existing user by email (username)
-            // Note: If editing, we might want to find by ID, but for now email match is safe enough or we find by teacher.userId
-            let existingUser = users.find(u => u.username === email || u.username === email.toLowerCase());
+            const teacherData = {
+                name: inputs[0].value,
+                email: inputs[1].value,
+                password: inputs[2].value || 'password',
+                phone: inputs[3].value,
+                subject: selects[0].value,
+                class: selects[1].value,
+                status: selects[2].value
+            };
 
             if (form.dataset.updateId) {
-                // EDIT MODE
-                const teacher = SchoolData.getCollection('teachers').find(t => t.id == form.dataset.updateId);
-                if (teacher && teacher.userId) {
-                    existingUser = users.find(u => u.id === teacher.userId);
-                }
-
-                if (existingUser) {
-                    // Update credentials
-                    SchoolData.updateItem('users', existingUser.id, {
-                        username: email, // sync email change
-                        password: password || existingUser.password, // only update if provided
-                        name: name
-                    });
-                    userId = existingUser.id;
-                } else {
-                    // Create if missing (was legacy?)
-                    const newUser = SchoolData.addItem('users', {
-                        username: email,
-                        password: password || 'password',
-                        role: 'teacher',
-                        name: name
-                    });
-                    userId = newUser.id;
-                }
-
-                // Update Teacher
-                SchoolData.updateItem('teachers', form.dataset.updateId, {
-                    name, email, phone,
-                    subject: selects[0].value,
-                    class: selects[1].value,
-                    status: selects[2].value,
-                    userId: userId // ensure link
-                });
+                SchoolData.updateItem('teachers', form.dataset.updateId, teacherData);
                 delete form.dataset.updateId;
-
             } else {
-                // ADD MODE
-                if (existingUser) {
-                    alert('A user with this email already exists.');
-                    return;
-                }
-
-                const newUser = SchoolData.addItem('users', {
-                    username: email,
-                    password: password || 'password',
-                    role: 'teacher',
-                    name: name
-                });
-                userId = newUser.id;
-
-                // Create Teacher
-                SchoolData.addItem('teachers', {
-                    name, email, phone,
-                    subject: selects[0].value,
-                    class: selects[1].value,
-                    status: selects[2].value,
-                    userId: userId
-                });
+                SchoolData.addItem('teachers', teacherData);
             }
 
             document.getElementById('addTeacherModal').checked = false;
             form.reset();
             loadTeachers();
             loadStats();
-            if (window.SchoolUtils) window.SchoolUtils.showToast('Teacher saved with login credentials.', 'success');
         };
     }
 
@@ -525,13 +374,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const hash = window.location.hash || '#dashboard';
 
         // Hide all sections first
-        const sections = ['reports', 'logs', 'results-mgmt', 'teachers', 'gallery-mgmt', 'admissions'];
+        // Hide all sections first
+        const sections = ['reports', 'logs', 'results-mgmt', 'teachers', 'gallery-mgmt', 'admissions', 'announcement'];
 
         sections.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
 
+        // Toggle requested section
         // Toggle requested section
         if (hash === '#reports') {
             document.getElementById('reports').style.display = 'block';
@@ -549,43 +400,17 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('teachers').style.display = 'block';
         } else if (hash === '#admissions') {
             document.getElementById('admissions').style.display = 'block';
-            loadAdmissions();
+            // Ensure lists are loaded? loadAdmissions() is called in INIT, so it should be fine.
         } else if (hash === '#announcement') {
-            document.querySelector('.admin-announcements').style.display = 'block';
-            // Hide stats cards for cleaner view? Or show them? 
-            // If we treat it as a separate page, hide stats.
+            document.getElementById('announcement').style.display = 'block';
         } else {
             // Default Dashboard View
-            // If no match, show main dashboard sections if we want to show stats, announcements etc on default "#dashboard"
-            // The default view seems to include stats, announcements, etc in the main flow.
-            // But we wrapped teachers in a hidden section now.
-            // We should ensure that checking hash '#dashboard' or empty shows stats and hides specific overlays?
-            // Actually, the structure is:
-            // <main>
-            //   <header>...</header>
-            //   <section class="stats-cards">...</section>
-            //   <section class="admin-announcements">...</section>
-            //   <section id="teachers" hidden>...</section>
-            //   <div id="gallery-mgmt" hidden>...</div>
-            // </main>
-
-            // So default means showing stats & announcements.
-            // We should toggle those? Or are they always visible?
-            // If we hide dashboard content when showing overlays (gallery/results), the dashboard becomes cleaner.
-
-            // Let's implement a clean toggle:
-            // If hash is specific, hide MAIN DASHBOARD elements (Stats, Announcements).
-            // Show only the target.
-
             if (hash === '' || hash === '#dashboard') {
                 document.querySelector('.stats-cards').style.display = 'grid';
                 document.querySelector('.admin-announcements').style.display = 'block';
                 document.getElementById('teachers').style.display = 'none';
-            } else if (hash === '#announcement') {
-                // Standalone Announcement View
-                document.querySelector('.stats-cards').style.display = 'none';
-                document.querySelector('.admin-announcements').style.display = 'block';
             } else {
+                // If we are in specific view (that was handled above), these should be hidden.
                 document.querySelector('.stats-cards').style.display = 'none';
                 document.querySelector('.admin-announcements').style.display = 'none';
             }
@@ -597,113 +422,95 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- RESULTS MANAGEMENT ---
     const initResultsManagement = () => {
-        const pubYear = document.getElementById('pub-year');
-        const pubTerm = document.getElementById('pub-term');
-        const pubBtn = document.getElementById('btn-publish-toggle');
-        const statusText = document.getElementById('pub-status-text');
+        try {
+            const pubYear = document.getElementById('pub-year');
+            const pubTerm = document.getElementById('pub-term');
+            const pubBtn = document.getElementById('btn-publish-toggle');
+            const statusText = document.getElementById('pub-status-text');
 
-        if (!pubYear || !pubTerm || !pubBtn) {
-            console.error('Results elements not found in DOM.');
-            return;
-        }
+            if (!pubYear || !pubTerm) return;
 
-        // Populate Years (Dynamic + Future) if empty
-        if (pubYear.options.length === 0) {
-            const years = SchoolData.getDB().academicYears || [];
-            pubYear.innerHTML = years.map(y => `<option value="${y.id}">${y.name}</option>`).join('');
-        }
+            // Populate Years (Current & Past ONLY)
+            const db = SchoolData.getDB();
+            const allYears = db.academicYears || [];
+            const currentSystemYear = new Date().getFullYear();
 
-        // Populate Terms if empty
-        if (pubTerm.options.length === 0) {
-            const terms = SchoolData.getTerms() || [];
+            // Filter: Allow years <= currentSystemYear
+            let visibleYears = allYears.filter(y => parseInt(y.id) <= currentSystemYear);
+
+            // Fallback: If no years found (e.g. data only has future years?), Just show all or default
+            if (visibleYears.length === 0) {
+                console.warn('No past/current years found. Showing all.');
+                visibleYears = allYears;
+            }
+
+            pubYear.innerHTML = visibleYears.map(y => `<option value="${y.id}">${y.name}</option>`).join('');
+
+            // Auto-select Current Year
+            const currentYearObj = visibleYears.find(y => parseInt(y.id) === currentSystemYear);
+            if (currentYearObj) {
+                pubYear.value = currentYearObj.id;
+            } else if (visibleYears.length > 0) {
+                pubYear.value = visibleYears[0].id; // Default to first available
+            }
+
+            // Populate Terms
+            const terms = SchoolData.getTerms();
             pubTerm.innerHTML = terms.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
-        }
 
-        const checkStatus = () => {
-            const y = pubYear.value;
-            const t = pubTerm.value;
+            const checkStatus = () => {
+                const y = pubYear.value;
+                const t = pubTerm.value;
+                if (!y || !t) return; // Guard
 
-            if (!y || !t) {
-                pubBtn.textContent = 'Setup Required';
-                pubBtn.disabled = true;
-                return;
-            }
-            pubBtn.disabled = false;
+                const isPub = SchoolData.isPublished(y, t);
 
-            const isPub = SchoolData.isPublished(y, t);
-
-            if (isPub) {
-                pubBtn.textContent = 'Unpublish Results';
-                pubBtn.className = 'btn reject'; // Red for danger/undo
-                statusText.innerHTML = `✅ Results for ${y} ${t} are LIVE (Visible to Students).`;
-                statusText.style.color = 'green';
-            } else {
-                pubBtn.textContent = 'Publish Results';
-                pubBtn.className = 'btn primary';
-                statusText.innerHTML = `🔒 Results for ${y} ${t} are HIDDEN.`;
-                statusText.style.color = '#666';
-            }
-        };
-
-        // Attach Listener (Avoid multiple attachments by assigning onclick)
-        pubBtn.onclick = (e) => {
-            e.preventDefault();
-            const y = pubYear.value;
-            const t = pubTerm.value;
-            const isPub = SchoolData.isPublished(y, t);
-
-            const modal = document.getElementById('confirmModal');
-            const title = document.getElementById('confirm-title');
-            const msg = document.getElementById('confirm-msg');
-            const yesBtn = document.getElementById('confirm-yes');
-            const cancelBtn = document.getElementById('confirm-cancel');
-
-            // Setup Modal
-            if (isPub) {
-                title.textContent = 'Unpublish Results?';
-                msg.textContent = `Are you sure you want to HIDE results for ${y} ${t}? Students will lose access immediately.`;
-                yesBtn.className = 'btn reject';
-                yesBtn.textContent = 'Unpublish';
-            } else {
-                title.textContent = 'Publish Results?';
-                msg.textContent = `Are you sure you want to PUBLISH results for ${y} ${t}? Students will be able to view them immediately.`;
-                yesBtn.className = 'btn primary';
-                yesBtn.textContent = 'Publish Now';
-            }
-
-            // Show Modal
-            modal.checked = true;
-
-            // Handle Confirm
-            yesBtn.onclick = () => {
                 if (isPub) {
-                    SchoolData.unpublishResults(y, t);
+                    pubBtn.textContent = 'Unpublish Results';
+                    pubBtn.className = 'btn reject'; // Red for danger/undo
+                    statusText.innerHTML = `✅ Results for ${y} ${t} are LIVE (Visible to Students).`;
+                    statusText.style.color = 'green';
                 } else {
-                    SchoolData.publishResults(y, t);
+                    pubBtn.textContent = 'Publish Results';
+                    pubBtn.className = 'btn primary';
+                    statusText.innerHTML = `🔒 Results for ${y} ${t} are HIDDEN.`;
+                    statusText.style.color = '#666';
                 }
-                checkStatus();
-                modal.checked = false;
-                window.SchoolUtils.showToast(isPub ? 'Results Unpublished' : 'Results Published', 'success');
             };
 
-            // Handle Cancel (Optional cleanup)
-            cancelBtn.onclick = () => {
-                modal.checked = false;
+            pubBtn.onclick = () => {
+                const y = pubYear.value;
+                const t = pubTerm.value;
+                const isPub = SchoolData.isPublished(y, t);
+
+                if (isPub) {
+                    if (confirm('Are you sure you want to hide these results from students?')) {
+                        SchoolData.unpublishResults(y, t);
+                        checkStatus();
+                    }
+                } else {
+                    if (confirm('Are you sure you want to publish these results? Students will be able to view them immediately.')) {
+                        SchoolData.publishResults(y, t);
+                        checkStatus();
+                    }
+                }
             };
-        };
 
-        pubYear.onchange = checkStatus;
-        pubTerm.onchange = checkStatus;
+            pubYear.onchange = checkStatus;
+            pubTerm.onchange = checkStatus;
 
-        // Initial check
-        checkStatus();
-        console.log('Results Management Initialized with Modal');
+            // Initial check
+            checkStatus();
+
+        } catch (e) {
+            console.error('Error in initResultsManagement:', e);
+            alert('Error loading Results Management: ' + e.message);
+        }
     };
 
     // Logging Hooks
     // We hook into the exposed global functions to log actions
     const originalAddTeacher = window.SchoolData.addItem; // Warning: this is low level. 
-    // better to add logs in the specific handlers
 
 
     // --- GALLERY MANAGEMENT ---

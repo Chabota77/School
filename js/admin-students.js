@@ -30,25 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load students
     const loadStudents = () => {
-        let students = SchoolData.getCollection('students');
-
-        // BACKFILL: Assign Roll No if missing
-        let maxRoll = students.reduce((max, s) => Math.max(max, s.rollNo || 0), 2500000);
-        let updated = false;
-
-        students.forEach(s => {
-            if (!s.rollNo) {
-                maxRoll++;
-                s.rollNo = maxRoll;
-                SchoolData.updateItem('students', s.id, { rollNo: maxRoll });
-                updated = true;
-            }
-        });
-
-        if (updated) {
-            students = SchoolData.getCollection('students'); // Refresh
-        }
-
+        const students = SchoolData.getCollection('students');
         // Join with class names
         allStudentsData = students.map(s => {
             const cls = classes.find(c => c.id === s.classId);
@@ -68,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         studentsList.innerHTML = data.map(s => `
             <tr>
-                <td>${s.rollNo || '-'}</td>
+                <td>${s.rollNo || s.id}</td>
                 <td>${s.name}</td>
                 <td>${s.gender || '-'}</td>
                 <td>${s.age || '-'}</td>
@@ -89,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const filtered = allStudentsData.filter(s => {
             const matchesClass = classFilter ? s.class_name === classFilter : true;
-            const rollNo = (2500000 + (s.rollNo || 0)).toString();
+            const rollNo = (s.rollNo || s.id).toString();
             const matchesSearch = s.name.toLowerCase().includes(searchTerm) || rollNo.includes(searchTerm);
             return matchesClass && matchesSearch;
         });
@@ -138,7 +120,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (id) {
             SchoolData.updateItem('students', id, studentData);
         } else {
-            SchoolData.addItem('students', studentData);
+            // Use new Auto-Number logic
+            SchoolData.addStudent(studentData);
         }
 
         modalToggle.checked = false;
