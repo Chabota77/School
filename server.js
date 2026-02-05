@@ -715,6 +715,7 @@ app.get('/api/payments/stats/monthly', authenticateToken, (req, res) => {
     });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
+    console.log(`Network access: http://10.26.8.243:${PORT}`);
 });

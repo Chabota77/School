@@ -119,17 +119,31 @@ document.addEventListener('DOMContentLoaded', () => {
             tr.innerHTML = `
                 <td>${a.student_name}</td>
                 <td>${a.class_name}</td>
+                <td>${a.gender || 'N/A'}</td>  <!-- CHANGED TO GENDER -->
                 <td>${a.date_applied}</td>
                 <td>${a.phone}</td>
                 <td class="actions">
                     ${a.status === 'Pending' ? `
                     <button class="btn accept" onclick="updateAdmission('${a.id}', 'Approved')">Accept</button>
                     <button class="btn reject" onclick="updateAdmission('${a.id}', 'Rejected')">Reject</button>
-                    ` : `<span>${a.status}</span>`}
+                    ` : (a.status === 'Approved' ? `
+                        <span style="font-weight:bold; color:green; display:block; margin-bottom:5px;">Approved</span>
+                        <button class="btn secondary" onclick="downloadAdmissionLetter('${a.id}')" style="font-size:0.8em; padding:5px 10px; background-color: #2b6cb0; color: white; border: none;">Download Letter</button>
+                    ` : `<span>${a.status}</span>`)}
                 </td>
             `;
             tbody.appendChild(tr);
         });
+    };
+
+    window.clearAdmissions = () => {
+        if (confirm('Are you sure you want to CLEAR ALL admissions? This cannot be undone.')) {
+            const db = SchoolData.getDB();
+            db.admissions = [];
+            SchoolData.saveDB(db);
+            loadAdmissions();
+            loadStats();
+        }
     };
 
     const loadAnnouncements = () => {
@@ -171,15 +185,100 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Helper: Download Acceptance Letter
+    window.downloadAdmissionLetter = (id) => {
+        const admissions = SchoolData.getCollection('admissions');
+        const adm = admissions.find(a => a.id == id);
+        if (!adm) {
+            alert("Admission record not found.");
+            return;
+        }
+
+        if (!window.jspdf) {
+            alert("PDF Generator not loaded. Please refresh.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(10, 61, 98); // Blue
+        doc.text("K-Lombe School", 105, 20, null, null, "center");
+
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Address: P.O. Box 12345, Lusaka, Zambia", 105, 30, null, null, "center");
+        doc.text("Email: admissions@k-lombeschool.com", 105, 36, null, null, "center");
+
+        doc.setLineWidth(0.5);
+        doc.line(20, 42, 190, 42);
+
+        // Body
+        doc.setFontSize(16);
+        doc.setFont(undefined, 'bold');
+        doc.text("OFFICIAL ADMISSION LETTER", 105, 55, null, null, "center");
+
+        doc.setFontSize(11);
+        doc.setFont(undefined, 'normal');
+        const today = new Date().toLocaleDateString();
+        doc.text(`Date: ${today}`, 20, 65);
+
+        doc.text(`Dear Parent/Guardian of ${adm.student_name},`, 20, 80);
+
+        // Retrieve generic password or actual if stored
+        // Note: The remote code creates user with password 'password'
+        const username = adm.student_name.toLowerCase().replace(/\s+/g, '');
+
+        const text = `We are pleased to inform you that your child's application for admission into ${adm.class_name} at K-Lombe School has been SUCCESSFUL for the 2026 Academic Year.\n\nYour child has been allocated specific Login Credentials to access the Student Portal:\n\nUsername: ${username}\nPassword: password\n\nPlease ensure you pay the school fees before the term begins to secure this place. We look forward to welcoming you to our family.`;
+
+        const splitText = doc.splitTextToSize(text, 170);
+        doc.text(splitText, 20, 90);
+
+        // Signature
+        doc.text("Sincerely,", 20, 160);
+        doc.text("Admin Admissions", 20, 170);
+        doc.text("K-Lombe School Management", 20, 175);
+
+        // Download
+        doc.save(`Acceptance_${adm.student_name.replace(/ /g, '_')}.pdf`);
+    };
+
     window.updateAdmission = (id, status) => {
         // Find admission
         const admissions = SchoolData.getCollection('admissions');
         const adm = admissions.find(a => a.id == id);
         if (adm) {
-            adm.status = status;
-            SchoolData.saveDB(SchoolData.getDB()); // persist
-            loadAdmissions();
+            // FIX: Use correctly persisted update
+            if (adm.status !== 'Pending' && status === 'Approved') {
+                // allow re-download if approved?
+                if (adm.status === 'Approved') {
+                    downloadAdmissionLetter(id);
+                    return;
+                }
+            }
+
+            SchoolData.updateItem('admissions', id, { status: status });
+            // adm.status = status; 
+            // SchoolData.saveDB(SchoolData.getDB()); // persist - using updateItem is safer as per previous fix
+
+            // loadAdmissions(); // Don't reload entire table, update UI locally
             loadStats();
+
+            // UI UPDATE: Replace buttons with Status AND Button
+            const btnFn = document.querySelector(`button[onclick*="updateAdmission('${id}', 'Approved')"]`);
+            if (btnFn) {
+                const td = btnFn.parentElement;
+                if (status === 'Approved') {
+                    td.innerHTML = `
+                        <span style="font-weight:bold; color:green; display:block; margin-bottom:5px;">Approved</span>
+                        <button class="btn secondary" onclick="downloadAdmissionLetter('${id}')" style="font-size:0.8em; padding:5px 10px; background-color: #2b6cb0; color: white; border: none;">Download Letter</button>
+                    `;
+                } else {
+                    td.innerHTML = `<span style="font-weight:bold; color:red;">Rejected</span>`;
+                }
+            }
 
             // If approved, create Student AND User Account
             if (status === 'Approved') {
@@ -197,7 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const createdUser = SchoolData.addItem('users', newUser);
 
                 // 3. Create Student linked to User
-                // Use new Auto-ID logic
+                // Use new Auto-ID logic available in data.js
                 SchoolData.addStudent({
                     userId: createdUser.id, // LINKED
                     name: adm.student_name,
@@ -208,7 +307,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: adm.email
                 });
 
-                alert(`Student enrolled! Login: ${newUser.username} / password`);
+                // 4. Auto-Download Letter
+                downloadAdmissionLetter(id);
+
+                if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
             }
         }
     };
@@ -261,27 +363,89 @@ document.addEventListener('DOMContentLoaded', () => {
             const inputs = form.querySelectorAll('input');
             const selects = form.querySelectorAll('select');
 
-            const teacherData = {
-                name: inputs[0].value,
-                email: inputs[1].value,
-                password: inputs[2].value || 'password',
-                phone: inputs[3].value,
-                subject: selects[0].value,
-                class: selects[1].value,
-                status: selects[2].value
-            };
+            const name = inputs[0].value;
+            const email = inputs[1].value;
+            const password = inputs[2].value; // validation needed?
+            const phone = inputs[3].value;
+
+            if (!email || !name) {
+                alert('Name and Email are required.');
+                return;
+            }
+
+            // 1. Manage User Account (Login)
+            let userId = null;
+            const users = SchoolData.getCollection('users');
+
+            // Search for existing user by email (username)
+            let existingUser = users.find(u => u.username === email || u.username === email.toLowerCase());
 
             if (form.dataset.updateId) {
-                SchoolData.updateItem('teachers', form.dataset.updateId, teacherData);
+                // EDIT MODE
+                const teacher = SchoolData.getCollection('teachers').find(t => t.id == form.dataset.updateId);
+                if (teacher && teacher.userId) {
+                    existingUser = users.find(u => u.id === teacher.userId);
+                }
+
+                if (existingUser) {
+                    // Update credentials
+                    SchoolData.updateItem('users', existingUser.id, {
+                        username: email, // sync email change
+                        password: password || existingUser.password, // only update if provided
+                        name: name
+                    });
+                    userId = existingUser.id;
+                } else {
+                    // Create if missing
+                    const newUser = SchoolData.addItem('users', {
+                        username: email,
+                        password: password || 'password',
+                        role: 'teacher',
+                        name: name
+                    });
+                    userId = newUser.id;
+                }
+
+                // Update Teacher
+                SchoolData.updateItem('teachers', form.dataset.updateId, {
+                    name, email, phone,
+                    subject: selects[0].value,
+                    class: selects[1].value,
+                    status: selects[2].value,
+                    userId: userId // ensure link
+                });
                 delete form.dataset.updateId;
+
             } else {
-                SchoolData.addItem('teachers', teacherData);
+                // ADD MODE
+                if (existingUser) {
+                    alert('A user with this email already exists.');
+                    return;
+                }
+
+                const newUser = SchoolData.addItem('users', {
+                    username: email,
+                    password: password || 'password',
+                    role: 'teacher',
+                    name: name
+                });
+                userId = newUser.id;
+
+                // Create Teacher
+                SchoolData.addItem('teachers', {
+                    name, email, phone,
+                    subject: selects[0].value,
+                    class: selects[1].value,
+                    status: selects[2].value,
+                    userId: userId
+                });
             }
 
             document.getElementById('addTeacherModal').checked = false;
             form.reset();
             loadTeachers();
             loadStats();
+            if (window.SchoolUtils) window.SchoolUtils.showToast('Teacher saved with login credentials.', 'success');
         };
     }
 
@@ -458,6 +622,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const terms = SchoolData.getTerms();
             pubTerm.innerHTML = terms.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
+            const statusContainer = document.getElementById('pub-status-container');
+
             const checkStatus = () => {
                 const y = pubYear.value;
                 const t = pubTerm.value;
@@ -467,14 +633,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (isPub) {
                     pubBtn.textContent = 'Unpublish Results';
-                    pubBtn.className = 'btn reject'; // Red for danger/undo
-                    statusText.innerHTML = `✅ Results for ${y} ${t} are LIVE (Visible to Students).`;
-                    statusText.style.color = 'green';
+                    pubBtn.className = 'btn reject'; // Red for danger
+                    pubBtn.style.backgroundColor = '#e53e3e';
+
+                    statusContainer.style.backgroundColor = '#def7ec';
+                    statusContainer.style.border = '1px solid #38a169';
+                    statusText.innerHTML = `✅ Results for ${y} ${t} are <strong>PUBLISHED</strong>.`;
+                    statusText.style.color = '#047857';
                 } else {
                     pubBtn.textContent = 'Publish Results';
                     pubBtn.className = 'btn primary';
-                    statusText.innerHTML = `🔒 Results for ${y} ${t} are HIDDEN.`;
-                    statusText.style.color = '#666';
+                    pubBtn.style.backgroundColor = ''; // Reset
+
+                    statusContainer.style.backgroundColor = '#f3f4f6';
+                    statusContainer.style.border = '1px dashed #9ca3af';
+                    statusText.innerHTML = `🔒 Results for ${y} ${t} are <strong>PRIVATE</strong>.`;
+                    statusText.style.color = '#4b5563';
                 }
             };
 
@@ -484,12 +658,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const isPub = SchoolData.isPublished(y, t);
 
                 if (isPub) {
-                    if (confirm('Are you sure you want to hide these results from students?')) {
+                    if (confirm('Are you sure you want to HIDE results?')) {
                         SchoolData.unpublishResults(y, t);
                         checkStatus();
                     }
                 } else {
-                    if (confirm('Are you sure you want to publish these results? Students will be able to view them immediately.')) {
+                    if (confirm('Are you sure you want to PUBLISH results?')) {
                         SchoolData.publishResults(y, t);
                         checkStatus();
                     }

@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
 
         if (myStudents.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No pupils assigned to your classes.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4">No pupils assigned to your classes.</td></tr>';
             return;
         }
 
@@ -57,11 +57,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${s.name}</td>
                 <td>${s.gender || 'N/A'}</td>
                 <td>${cls ? cls.name : s.classId}</td>
-                <td>${s.age || 'N/A'}</td>
-                <td>
-                    <button class="btn view" onclick="alert('View Student Details')">View</button>
-                    <button class="btn message" onclick="alert('Message Student')">✉</button>
-                </td>
             </tr>
             `;
         }).join('');

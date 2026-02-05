@@ -62,5 +62,19 @@ window.SchoolUtils = {
         localStorage.setItem('system_logs', JSON.stringify(logs));
     },
 
+    // --- GRADE CALCULATION ---
+    calculateGrade: (score) => {
+        score = parseInt(score);
+        if (isNaN(score)) return '-';
+        if (score >= 86) return 'A+';
+        if (score >= 75) return 'A';
+        if (score >= 65) return 'B+';
+        if (score >= 60) return 'B';
+        if (score >= 55) return 'C+';
+        if (score >= 50) return 'C';
+        if (score >= 45) return 'D+';
+        return 'D'; // 0 - 44
+    },
+
     getLogs: () => JSON.parse(localStorage.getItem('system_logs') || '[]')
 };
