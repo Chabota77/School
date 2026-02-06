@@ -75,9 +75,9 @@
         <input type="text" placeholder="Announcement title">
 
         <select>
-          <option>Send to: Everyone</option>
-          <option>Teachers only</option>
-          <option>Pupils only</option>
+          <option value="Everyone">Send to: Everyone</option>
+          <option value="Teachers only">Teachers only</option>
+          <option value="Pupils only">Pupils only</option>
         </select>
 
         <textarea rows="4" placeholder="Write your announcement here..."></textarea>
@@ -179,8 +179,102 @@
 
     <!-- Add Teacher Modal -->
     <input type="checkbox" id="addTeacherModal" class="modal-toggle">
+    <div class="modal">
+      <div class="modal-content">
+        <label for="addTeacherModal" class="modal-close">&times;</label>
+        <h3>Add New Teacher</h3>
+        <form>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" placeholder="John Banda" required>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" placeholder="john@school.com" required>
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" placeholder="Min 6 characters">
+          </div>
+          <div class="form-group">
+            <label>Phone Number</label>
+            <input type="tel" placeholder="097..." required>
+          </div>
+          <div class="form-group">
+            <label>Subject Specialization</label>
+            <select required>
+              <option value="">Select Subject</option>
+              <option value="Mathematics">Mathematics</option>
+              <option value="English">English</option>
+              <option value="Science">Science</option>
+              <option value="Social Studies">Social Studies</option>
+              <option value="Art">Art</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Assigned Class</label>
+            <select required>
+              <option value="">Select Class</option>
+              <option value="Grade 1">Grade 1</option>
+              <option value="Grade 2">Grade 2</option>
+              <option value="Grade 3">Grade 3</option>
+              <option value="Grade 4">Grade 4</option>
+              <option value="Grade 5">Grade 5</option>
+              <option value="Grade 6">Grade 6</option>
+              <option value="Grade 7">Grade 7</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select>
+              <option value="Active">Active</option>
+              <option value="On Leave">On Leave</option>
+            </select>
+          </div>
+          <div class="form-actions" style="margin-top: 20px;">
+            <button type="submit" class="btn save">Save Teacher</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
-    <!-- ... (Modals omitted for brevity, keeping file structure) ... -->
+    <!-- GALLERY MANAGEMENT SECTION -->
+    <section class="admin-section" id="gallery-mgmt" style="display:none;">
+      <header class="section-header">
+        <h2>Gallery Management</h2>
+      </header>
+
+      <div class="card" style="margin-bottom: 20px;">
+        <h3>Add New Image</h3>
+        <form id="addGalleryForm">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <label>
+              Upload File (Max 2MB)
+              <input type="file" id="imgUpload" accept="image/*">
+            </label>
+            <label>
+              OR Image URL
+              <input type="text" id="imgUrl" placeholder="https://example.com/image.jpg">
+            </label>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+            <input type="text" id="imgCaption" placeholder="Caption" required style="padding: 10px;">
+            <select id="imgCategory" style="padding: 10px;">
+              <option value="General">General</option>
+              <option value="Events">Events</option>
+              <option value="Academic">Academic</option>
+              <option value="Sports">Sports</option>
+            </select>
+          </div>
+          <button type="submit" class="btn primary">Add to Gallery</button>
+        </form>
+      </div>
+
+      <div id="adminGalleryGrid"
+        style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px;">
+        <!-- Images will be rendered here -->
+      </div>
+    </section>
 
     <!-- RESULTS MANAGEMENT SECTION -->
     <div id="results-mgmt" class="content-section" style="display:none;">
@@ -257,8 +351,7 @@
   </main>
 
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
   <script src="../js/data.js?v=6"></script>
   <script src="../js/utils.js?v=5"></script>
   <script src="../js/auth.js?v=5"></script>

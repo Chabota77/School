@@ -90,14 +90,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 <td>${t.class || 'N/A'}</td>
                 <td><span class="status ${t.status === 'Active' ? 'active' : 'leave'}">${t.status}</span></td>
                 <td class="actions">
-                    <button class="btn message" onclick="alert('Message feature coming soon')">✉</button>
-                    <button class="btn edit" onclick='editTeacher("${t.id}")'>✎</button>
-                    <button class="btn delete" onclick="deleteTeacher('${t.id}')">🗑</button>
+                    <button class="btn message" onclick="alert('Message feature coming soon')">Message</button>
+                    <button class="btn edit" onclick='editTeacher("${t.id}")'>Edit</button>
+                    <button class="btn delete" onclick="deleteTeacher('${t.id}')">Delete</button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     };
+
+
+
 
     const loadAdmissions = () => {
         allAdmissions = SchoolData.getCollection('admissions');
@@ -164,11 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="announcement-header">
                     <h4>${a.title}</h4>
                     <div class="announcement-actions">
-                         <button class="delete-btn" onclick="deleteAnnouncement(${a.id})">Delete</button>
+                         <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i> Delete</button>
                     </div>
                 </div>
-                <p>${a.content}</p>
-                <span>Audience: ${a.audience || 'Everyone'} • ${a.date}</span>
+                <div class="announcement-body">
+                    <p>${a.content}</p>
+                </div>
+                <div class="announcement-meta">
+                    <span>${a.audience || 'Everyone'}</span>
+                    <span>${a.date}</span>
+                </div>
             `;
             list.appendChild(div);
         });
@@ -178,10 +186,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Expose to window for inline onclicks
     window.deleteTeacher = (id) => {
+        console.log('Attempting to delete teacher with ID:', id);
         if (confirm('Delete this teacher?')) {
+            console.log('User confirmed deletion.');
             SchoolData.deleteItem('teachers', id);
             loadTeachers();
             loadStats();
+        } else {
+            console.log('User cancelled deletion.');
         }
     };
 
@@ -194,55 +206,19 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        if (!window.jspdf) {
-            alert("PDF Generator not loaded. Please refresh.");
-            return;
-        }
+        // URL Encode parameters to handle spaces and special characters
+        const items = {
+            student: adm.student_name,
+            parent: adm.parent_name || 'Parent/Guardian',
+            class: adm.class_name,
+            date: adm.date_applied
+        };
 
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
+        const params = new URLSearchParams(items).toString();
+        const url = `acceptance-letter.html?${params}`;
 
-        // Header
-        doc.setFontSize(22);
-        doc.setTextColor(10, 61, 98); // Blue
-        doc.text("K-Lombe School", 105, 20, null, null, "center");
-
-        doc.setFontSize(12);
-        doc.setTextColor(0);
-        doc.text("Address: P.O. Box 12345, Lusaka, Zambia", 105, 30, null, null, "center");
-        doc.text("Email: admissions@k-lombeschool.com", 105, 36, null, null, "center");
-
-        doc.setLineWidth(0.5);
-        doc.line(20, 42, 190, 42);
-
-        // Body
-        doc.setFontSize(16);
-        doc.setFont(undefined, 'bold');
-        doc.text("OFFICIAL ADMISSION LETTER", 105, 55, null, null, "center");
-
-        doc.setFontSize(11);
-        doc.setFont(undefined, 'normal');
-        const today = new Date().toLocaleDateString();
-        doc.text(`Date: ${today}`, 20, 65);
-
-        doc.text(`Dear Parent/Guardian of ${adm.student_name},`, 20, 80);
-
-        // Retrieve generic password or actual if stored
-        // Note: The remote code creates user with password 'password'
-        const username = adm.student_name.toLowerCase().replace(/\s+/g, '');
-
-        const text = `We are pleased to inform you that your child's application for admission into ${adm.class_name} at K-Lombe School has been SUCCESSFUL for the 2026 Academic Year.\n\nYour child has been allocated specific Login Credentials to access the Student Portal:\n\nUsername: ${username}\nPassword: password\n\nPlease ensure you pay the school fees before the term begins to secure this place. We look forward to welcoming you to our family.`;
-
-        const splitText = doc.splitTextToSize(text, 170);
-        doc.text(splitText, 20, 90);
-
-        // Signature
-        doc.text("Sincerely,", 20, 160);
-        doc.text("Admin Admissions", 20, 170);
-        doc.text("K-Lombe School Management", 20, 175);
-
-        // Download
-        doc.save(`Acceptance_${adm.student_name.replace(/ /g, '_')}.pdf`);
+        // Open in new tab
+        window.open(url, '_blank');
     };
 
     window.updateAdmission = (id, status) => {
@@ -316,6 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     window.deleteAnnouncement = (id) => {
+        console.log('Attempting to delete announcement with ID:', id);
         if (confirm('Delete announcement?')) {
             SchoolData.deleteItem('announcements', id);
             loadAnnouncements();
@@ -482,10 +459,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // INIT
+
     loadHelpers();
     loadStats();
     loadTeachers();
     loadAdmissions();
+
     loadAnnouncements();
 
     // --- REPORTING & LOGS RENDERING ---
@@ -542,6 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sections = ['reports', 'logs', 'results-mgmt', 'teachers', 'gallery-mgmt', 'admissions', 'announcement'];
 
         sections.forEach(id => {
+
             const el = document.getElementById(id);
             if (el) el.style.display = 'none';
         });
@@ -563,6 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (hash === '#teacher-mgmt' || hash === '#teachers') {
             document.getElementById('teachers').style.display = 'block';
         } else if (hash === '#admissions') {
+
             document.getElementById('admissions').style.display = 'block';
             // Ensure lists are loaded? loadAdmissions() is called in INIT, so it should be fine.
         } else if (hash === '#announcement') {

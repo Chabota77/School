@@ -31,8 +31,11 @@ const DEFAULT_DATA = {
     users: [
         { id: 'U1', username: 'admin', password: 'password', role: 'admin', name: 'Admin User' },
         { id: 'U2', username: 'teacher', password: 'password', role: 'teacher', name: 'Teacher User', relatedId: 'T001' },
-        { id: 'U3', username: 'student', password: 'password', role: 'student', name: 'Student User', relatedId: '2600001' }
+        { id: 'U3', username: 'student', password: 'password', role: 'student', name: 'Student User', relatedId: '2600001' },
+        { id: 'U4', username: 'accountant', password: 'password', role: 'accountant', name: 'Accountant User' },
+        { id: 'U5', username: 'info', password: 'password', role: 'info_officer', name: 'Info Officer' }
     ],
+
     teachers: [
         { id: 'T001', userId: 'U2', name: 'Mr. John Banda', subjectIds: ['MATH'], classIds: ['C7A'], status: 'Active', email: 'john.banda@school.com', phone: '+260977123456' },
         { id: 'T002', userId: null, name: 'Ms. Ruth Mwila', subjectIds: ['ENG'], classIds: ['C9B'], status: 'On Leave', email: 'ruth.mwila@school.com', phone: '+260966654321' },
@@ -72,6 +75,8 @@ const DEFAULT_DATA = {
     ],
     payments: [],
     tuitionPayments: [], // { id, studentId, amount, date, termId, status }
+    attendance: [], // { id, studentId, date, status, classId, teacherId, yearId, termId }
+
 };
 
 // --- CORE FUNCTIONS ---
@@ -80,8 +85,33 @@ function initData() {
     const stored = localStorage.getItem('bf_school_data');
     if (!stored) {
         localStorage.setItem('bf_school_data', JSON.stringify(DEFAULT_DATA));
+        localStorage.setItem('bf_data_version', '1.2'); // Add versioning to force updates
         console.log('Database initialized with normalized data.');
     } else {
+        const storedVersion = localStorage.getItem('bf_data_version');
+        const CURRENT_VERSION = '1.2';
+
+        // Force update if version mismatch (or missing)
+        if (storedVersion !== CURRENT_VERSION) {
+            console.log('Data version mismatch. Merging new default users...');
+            const db = JSON.parse(stored);
+
+            // Merge Users (Ensure Accountant/Info exist)
+            const newUsers = DEFAULT_DATA.users;
+            newUsers.forEach(nu => {
+                if (!db.users.find(u => u.username === nu.username)) {
+                    db.users.push(nu);
+                }
+            });
+
+            // Update version
+            localStorage.setItem('bf_data_version', CURRENT_VERSION);
+            localStorage.setItem('bf_school_data', JSON.stringify(db));
+            console.log('Data migration complete.');
+            window.location.reload();
+            return;
+        }
+
         const db = JSON.parse(stored);
 
         // Strict Schema Check: Ensure critical collections exist AND are populated

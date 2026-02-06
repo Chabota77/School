@@ -4,32 +4,40 @@
  */
 
 window.SchoolAuth = {
-    login: (username, password, role) => {
-        const db = window.SchoolData.getDB();
+    login: async (username, password, role) => {
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, role })
+            });
 
-        // Normalize role to lowercase for consistency
-        const targetRole = role.toLowerCase();
+            const data = await response.json();
 
-        // Find User
-        const user = db.users.find(u =>
-            u.username === username &&
-            u.password === password &&
-            u.role.toLowerCase() === targetRole
-        );
+            if (response.ok) {
+                window.SchoolUtils.showToast('Login Successful! Redirecting...', 'success');
 
-        if (user) {
-            window.SchoolUtils.showToast('Login Successful! Redirecting...', 'success');
-            localStorage.setItem('currentUser', JSON.stringify(user));
+                // Store Token and User Details
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-            setTimeout(() => {
-                if (targetRole === 'admin') window.location.href = 'admin/dashboard.html';
-                else if (targetRole === 'teacher') window.location.href = 'teacher/dashboard.html';
-                else if (targetRole === 'student') window.location.href = 'student/dashboard.html';
-                else window.location.href = 'index.html';
-            }, 1000);
-            return true;
-        } else {
-            window.SchoolUtils.showToast('Invalid credentials or role!', 'error');
+                setTimeout(() => {
+                    const targetRole = data.user.role || role; // Use returned role or requested role
+                    if (targetRole === 'admin') window.location.href = 'admin/dashboard.html';
+                    else if (targetRole === 'teacher') window.location.href = 'teacher/dashboard.html';
+                    else if (targetRole === 'student') window.location.href = 'student/dashboard.html';
+                    else if (targetRole === 'accountant') window.location.href = 'accountant-dashboard.html';
+                    else if (targetRole === 'info_officer') window.location.href = 'info-dashboard.html';
+                    else window.location.href = 'index.html';
+                }, 1000);
+                return true;
+            } else {
+                window.SchoolUtils.showToast(data.message || 'Login failed', 'error');
+                return false;
+            }
+        } catch (err) {
+            console.error('Login Error:', err);
+            window.SchoolUtils.showToast('Network error during login', 'error');
             return false;
         }
     },

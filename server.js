@@ -1,5 +1,5 @@
 const express = require('express');
-const mysql = require('mysql2');
+const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
@@ -23,47 +23,61 @@ app.use((req, res, next) => {
 app.use(express.static(path.join(__dirname, '/')));
 
 // Initialize Database
-const db = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME,
-    multipleStatements: true
+const dbPath = path.join(__dirname, 'school.db');
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) console.error('Error connecting to database:', err.message);
+    else console.log('Connected to SQLite database.');
 });
 
-db.connect((err) => {
-    if (err) throw err;
-    console.log('Connected to MySQL database.');
+// Helper to mimic mysql db.query style
+// This allows us to keep most of the code logic same
+db.query = function (sql, params, callback) {
+    if (typeof params === 'function') {
+        callback = params;
+        params = [];
+    }
 
-    const initialFees = `
-        CREATE TABLE IF NOT EXISTS payments (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            student_id INT,
-            amount DECIMAL(10,2),
-            date DATE,
-            term VARCHAR(50),
-            year INT,
-            method VARCHAR(50) DEFAULT 'Cash',
-            received_by VARCHAR(100) DEFAULT 'Admin',
-            FOREIGN KEY (student_id) REFERENCES students(id) ON DELETE CASCADE
-        );
-    `;
+    const lowerSql = sql.trim().toLowerCase();
+    if (lowerSql.startsWith('select') || lowerSql.startsWith('show')) {
+        db.all(sql, params, (err, rows) => {
+            if (callback) callback(err, rows);
+        });
+    } else {
+        db.run(sql, params, function (err) {
+            if (callback) {
+                // Mimic MySQL result object
+                // this.lastID is equivalent to insertId
+                // this.changes is equivalent to affectedRows
+                const result = {
+                    insertId: this.lastID,
+                    affectedRows: this.changes
+                };
+                callback(err, result);
+            }
+        });
+    }
+};
 
-    db.query(initialFees, (err) => {
-        if (err) console.error('Error creating payments table:', err);
+// Also we need to mimic db.beginTransaction etc.
+// SQLite transactions are serialized, but we can wrap them.
+db.beginTransaction = function (callback) {
+    db.run('BEGIN TRANSACTION', (err) => {
+        if (callback) callback(err);
     });
+};
 
-    // Check if term_fee column exists in classes, if not add it
-    const checkFeeColumn = "SHOW COLUMNS FROM classes LIKE 'term_fee'";
-    db.query(checkFeeColumn, (err, results) => {
-        if (results.length === 0) {
-            db.query("ALTER TABLE classes ADD COLUMN term_fee DECIMAL(10,2) DEFAULT 3000.00", (err) => {
-                if (err) console.error('Error adding term_fee column:', err);
-                else console.log('Added term_fee column to classes table');
-            });
-        }
+db.commit = function (callback) {
+    db.run('COMMIT', (err) => {
+        if (callback) callback(err);
     });
-});
+};
+
+db.rollback = function (callback) {
+    db.run('ROLLBACK', (err) => {
+        if (callback) callback(err);
+    });
+};
+
 
 // Middleware for authentication
 const authenticateToken = (req, res, next) => {
@@ -72,7 +86,7 @@ const authenticateToken = (req, res, next) => {
 
     if (token == null) return res.sendStatus(401);
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET || 'school', (err, user) => {
         if (err) return res.sendStatus(403);
         req.user = user;
         next();
@@ -85,53 +99,73 @@ const authenticateToken = (req, res, next) => {
 app.post('/api/auth/login', (req, res) => {
     const { username, password, role } = req.body;
 
+    // 1. Determine Table and Query Strategy based on Role
     let table = 'admins';
-    let queryCol = 'username';
+    let query = `SELECT * FROM admins WHERE LOWER(username) = LOWER(?)`;
+    let queryParams = [username];
 
     if (role === 'teacher') {
         table = 'teachers';
-        queryCol = 'email'; // Teachers log in with email
+        query = `SELECT * FROM teachers WHERE LOWER(email) = LOWER(?)`;
+        queryParams = [username];
     } else if (role === 'student') {
-        // Future implementation
+        table = 'students';
+        let dbId = parseInt(username);
+        if (!isNaN(dbId) && dbId > 2500000) {
+            dbId = dbId - 2500000;
+        }
+
+        if (isNaN(dbId)) {
+            query = `SELECT * FROM students WHERE LOWER(name) = LOWER(?)`;
+            queryParams = [username];
+        } else {
+            query = `SELECT * FROM students WHERE id = ?`;
+            queryParams = [dbId];
+        }
     }
 
-    const query = `SELECT * FROM ${table} WHERE ${queryCol} = ?`;
-    db.query(query, [username], async (err, results) => {
+    db.query(query, queryParams, async (err, results) => {
         if (err) {
             console.error('Login DB Error:', err);
             return res.status(500).json({ error: err.message });
         }
         if (results.length === 0) {
-            console.log(`Login failed: User not found in ${table} for ${queryCol}=${username}`);
-            return res.status(401).json({ message: 'Invalid credentials' });
+            console.log(`Login failed: User not found in ${table} for input=${username}`);
+            return res.status(401).json({ message: 'Invalid credentials. User not found.' });
         }
 
         const user = results[0];
-        console.log('Login: User found:', user.id, user[queryCol]);
+        console.log(`Login: ${role} found:`, user.id);
 
-        // Check password
         if (!user.password) {
             console.log('Login failed: User has no password set');
-            return res.status(401).json({ message: 'Invalid credentials (no password set)' });
+            return res.status(401).json({ message: 'Access denied. Account not set up.' });
         }
 
-        const isMatch = await bcrypt.compare(password, user.password).catch(e => {
+        let isMatch = false;
+        try {
+            if (user.password.startsWith('$2b$')) {
+                isMatch = await bcrypt.compare(password, user.password);
+            } else {
+                isMatch = (password === user.password);
+            }
+        } catch (e) {
             console.error('Bcrypt error:', e);
-            return false;
-        });
+            return res.status(500).json({ error: 'Authentication error' });
+        }
 
-        console.log('Login: Password match result:', isMatch);
-
-        // For admins (legacy check for plain text dev passwords)
-        const passwordMatch = user.password.startsWith('$2b$') ? isMatch : (password === user.password);
-
-        if (!passwordMatch) {
+        if (!isMatch) {
             console.log('Login failed: Password mismatch');
             return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        const token = jwt.sign({ id: user.id, username: user[queryCol], role: role }, process.env.JWT_SECRET, { expiresIn: '1h' });
-        res.json({ token, user: { id: user.id, username: user[queryCol], role: role, name: user.name } });
+        const token = jwt.sign(
+            { id: user.id, username: user.username || user.name || user.email, role: role },
+            process.env.JWT_SECRET || 'school',
+            { expiresIn: '1h' }
+        );
+
+        res.json({ token, user: { id: user.id, role: role, name: user.name, username: user.username } });
     });
 });
 
@@ -304,41 +338,13 @@ app.get('/api/admissions', authenticateToken, (req, res) => {
     });
 });
 
-// Check if phone column exists in admissions
-const checkPhoneColumn = "SHOW COLUMNS FROM admissions LIKE 'phone'";
-db.query(checkPhoneColumn, (err, results) => {
-    if (results.length === 0) {
-        db.query("ALTER TABLE admissions ADD COLUMN phone VARCHAR(20) AFTER parent_name", (err) => {
-            if (err) console.error('Error adding phone column:', err);
-            else console.log('Added phone column to admissions table');
-        });
-    }
-});
+// Check if phone column exists (SQLite handled via schema update usually, skipping dynamic alter for now as schema handles it)
 
-
-// Post Results
-// ... (omitted)
-
-// --- ADMISSIONS ROUTES ---
-
-// Get all admissions
-app.get('/api/admissions', authenticateToken, (req, res) => {
-    const query = `
-        SELECT a.*, c.name as class_name 
-        FROM admissions a
-        LEFT JOIN classes c ON a.class_applied_id = c.id
-    `;
-    db.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
-});
 
 // Public Admission Submission
 app.post('/api/admissions', (req, res) => {
     const { student_name, age, class_applied_id, parent_name, phone } = req.body;
-    // We are replacing email with phone, but table might still have email column. 
-    // We'll treat 'phone' as the main contact.
+
     const query = 'INSERT INTO admissions (student_name, age, class_applied_id, parent_name, phone, status) VALUES (?, ?, ?, ?, ?, ?)';
     db.query(query, [student_name, age, class_applied_id, parent_name, phone, 'Pending'], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
@@ -497,21 +503,7 @@ app.get('/api/teacher/pupils', authenticateToken, (req, res) => {
 
 // --- RESULTS ROUTES ---
 
-// Create Results Table if not exists (Lazy migration for now)
-db.query(`
-    CREATE TABLE IF NOT EXISTS results (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        student_id INT,
-        subject_id INT,
-        marks INT,
-        comments TEXT,
-        term VARCHAR(20) DEFAULT 'Term 1',
-        year INT DEFAULT 2026,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (student_id) REFERENCES students(id),
-        FOREIGN KEY (subject_id) REFERENCES subjects(id)
-    )
-`, (err) => { if (err) console.error('Error creating results table:', err); });
+// Create Results Table if not exists (Handled by schema)
 
 // Post Results
 app.post('/api/results', authenticateToken, (req, res) => {
@@ -590,11 +582,6 @@ app.get('/api/public/results', (req, res) => {
         if (err) return res.status(500).json({ error: err.message });
 
         // Deduplicate results based on subject_id (keep latest)
-        const uniqueResults = [];
-        const seenSubjects = new Set();
-
-        // Iterate in reverse to keep the "last" occurrence if there are duplicates
-        // Or better yet, just use a map
         const subjectMap = new Map();
         results.forEach(r => {
             subjectMap.set(r.subject_id, r);
@@ -651,14 +638,19 @@ app.get('/api/payments/stats/monthly', authenticateToken, (req, res) => {
     const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
     const monthIndex = months.indexOf(month) + 1;
 
+    // SQLite doesn't have MONTH() and YEAR() functions by default like MySQL
+    // We need to use strftime
     if (monthIndex === 0) return res.json({ total: 0 });
+
+    const monthStr = monthIndex.toString().padStart(2, '0');
+    // Date format in DB is YYYY-MM-DD usually
 
     const query = `
         SELECT SUM(amount) as total 
         FROM payments 
-        WHERE MONTH(date) = ? AND YEAR(date) = ?
+        WHERE strftime('%m', date) = ? AND strftime('%Y', date) = ?
     `;
-    db.query(query, [monthIndex, year], (err, results) => {
+    db.query(query, [monthStr, year.toString()], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ total: results[0].total || 0 });
     });
@@ -691,31 +683,7 @@ app.delete('/api/payments/:id', authenticateToken, (req, res) => {
     });
 });
 
-// Get Payment Stats (Monthly)
-app.get('/api/payments/stats/monthly', authenticateToken, (req, res) => {
-    const { month, year } = req.query;
-    // month is string (e.g. "January"), year is int (e.g. 2026)
-    // We need to convert Month name to number or parse dateStr
-    // Since default date format is YYYY-MM-DD
-
-    // Quick helper for month index
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const monthIndex = months.indexOf(month) + 1;
-
-    if (monthIndex === 0) return res.json({ total: 0 });
-
-    const query = `
-        SELECT SUM(amount) as total 
-        FROM payments 
-        WHERE MONTH(date) = ? AND YEAR(date) = ?
-    `;
-    db.query(query, [monthIndex, year], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ total: results[0].total || 0 });
-    });
-});
-
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
-    console.log(`Network access: http://10.26.8.243:${PORT}`);
+    console.log(`Network access: http://192.168.1.109:${PORT}`);
 });

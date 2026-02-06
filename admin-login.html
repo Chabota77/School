@@ -58,6 +58,14 @@
                     style="width:100%; padding:10px; margin-bottom:20px; border:1px solid #cbd5e0; border-radius:4px;"
                     required>
 
+                <label style="text-align: left; display: block; color: #4a5568; margin-bottom: 5px;">Login As</label>
+                <select id="role"
+                    style="width:100%; padding:10px; margin-bottom:20px; border:1px solid #cbd5e0; border-radius:4px;">
+                    <option value="admin">Administrator</option>
+                    <option value="accountant">Accountant</option>
+                    <option value="info_officer">Information Officer</option>
+                </select>
+
                 <button type="submit" class="btn primary"
                     style="width:100%; justify-content: center;">Authenticate</button>
             </form>
@@ -73,21 +81,22 @@
     <script src="js/utils.js"></script>
     <script src="js/auth.js"></script>
     <script>
-        document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
+        document.getElementById('adminLoginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const user = document.getElementById('user').value;
             const pass = document.getElementById('pass').value;
+            const role = document.getElementById('role').value;
             const btn = e.target.querySelector('button');
 
             btn.textContent = 'Checking...';
             btn.disabled = true;
 
-            const success = window.SchoolAuth.login(user, pass, 'admin');
+            // Login is now async
+            await window.SchoolAuth.login(user, pass, role);
 
-            if (!success) {
-                btn.textContent = 'Authenticate';
-                btn.disabled = false;
-            }
+            // Reset button state (if redirect happens, this won't matter much, but good for UX on failure)
+            btn.textContent = 'Authenticate';
+            btn.disabled = false;
         });
     </script>
 </body>

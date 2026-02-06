@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accountant Dashboard | K-Lombe School</title>
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- MOBILE SIDEBAR TOGGLE -->
+    <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle">
+    <label for="sidebar-toggle" class="sidebar-icon">☰</label>
+    <label for="sidebar-toggle" class="sidebar-overlay"></label>
+
+    <!-- SIDEBAR -->
+    <aside class="admin-sidebar">
+        <div class="admin-logo">Accountant Panel</div>
+        <nav>
+            <a href="#dashboard" class="active">Overview</a>
+            <a href="#students">Students</a>
+            <a href="#payments">Manage Payments</a>
+            <a href="#reports">Financial Reports</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="admin-main" id="dashboard">
+        <header class="admin-header">
+            <h1>Welcome, Accountant</h1>
+            <p>Financial Management Dashboard</p>
+        </header>
+
+        <!-- STATS CARDS -->
+        <section class="stats-cards">
+            <div class="card">
+                <h3>Total Collections</h3>
+                <p id="total-collections">ZMW 0</p>
+            </div>
+            <div class="card">
+                <h3>Pending Fees</h3>
+                <p id="pending-fees">ZMW 0</p>
+            </div>
+            <div class="card">
+                <h3>Today's Receipts</h3>
+                <p id="todays-receipts">0</p>
+            </div>
+        </section>
+
+
+
+        <!-- STUDENTS SECTION -->
+        <section class="admin-section" id="students" style="display:none;">
+            <div class="section-header">
+                <h2>Student Fee Registry</h2>
+            </div>
+            <div class="payment-filters">
+                <input type="text" id="search-student-list" placeholder="Search Active Students..."
+                    style="width: 100%;">
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Status</th>
+                            <th>Fee Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody">
+                        <!-- Dynamic -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- PAYMENTS SECTION (Enhanced to Match Admin) -->
+        <section class="admin-section" id="payments">
+            <div class="section-header">
+                <h2>Tuition Fee Payments</h2>
+                <button class="btn primary" onclick="openAddPaymentModal()">+ Record New Payment</button>
+            </div>
+
+            <div class="payment-filters" style="margin-bottom: 20px; display:flex; gap:10px;">
+                <input type="text" id="search-student" placeholder="Search Student Name..." style="flex:1;">
+                <select id="filter-class">
+                    <option value="">All Classes</option>
+                    <!-- Dynamic -->
+                </select>
+                <select id="filter-status">
+                    <option value="">All Statuses</option>
+                    <option value="Paid">Fully Paid</option>
+                    <option value="Partial">Partial</option>
+                    <option value="Unpaid">Unpaid</option>
+                </select>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Class</th>
+                            <th>Total Fees</th>
+                            <th>Paid</th>
+                            <th>Balance</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="paymentsTableBody">
+                        <!-- Dynamic Student Summary Rows -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- HISTORY MODAL -->
+        <input type="checkbox" id="historyModalToggle" class="modal-toggle">
+        <div class="modal" id="historyModal">
+            <div class="modal-content" style="max-width: 600px;">
+                <label for="historyModalToggle" class="modal-close">&times;</label>
+                <h3 id="historyStudentName">Payment History</h3>
+                <table class="admin-table" style="margin-top:15px;">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Term</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTableBody">
+                        <!-- Transactions -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ADD PAYMENT MODAL -->
+    <input type="checkbox" id="paymentModal" class="modal-toggle">
+    <div class="modal">
+        <div class="modal-content">
+            <label for="paymentModal" class="modal-close">&times;</label>
+            <h3>Record New Payment</h3>
+            <form id="paymentForm">
+                <div class="form-group">
+                    <label>Student ID (Roll No)</label>
+                    <input type="text" id="payStudentId" placeholder="e.g. 2600001" required>
+                    <small id="studentNameDisplay" style="color:green; font-weight:bold;"></small>
+                </div>
+                <div class="form-group">
+                    <label>Amount (ZMW)</label>
+                    <input type="number" id="payAmount" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label>Academic Year</label>
+                    <select id="payYear" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Term</label>
+                    <select id="payTerm" required></select>
+                </div>
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <select id="payMethod">
+                        <option value="Cash">Cash</option>
+                        <option value="Bank Transfer">Bank Transfer</option>
+                        <option value="Mobile Money">Mobile Money</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary">Record Payment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/accountant.js"></script>
+    <script>
+        document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.SchoolAuth.logout();
+        });
+    </script>
+</body>
+
+</html>

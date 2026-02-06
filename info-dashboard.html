@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Info Officer | K-Lombe School</title>
+    <link rel="stylesheet" href="css/admin-dashboard.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <input type="checkbox" id="sidebar-toggle" class="sidebar-toggle">
+    <label for="sidebar-toggle" class="sidebar-icon">☰</label>
+    <label for="sidebar-toggle" class="sidebar-overlay"></label>
+
+    <aside class="admin-sidebar">
+        <div class="admin-logo">Info Office</div>
+        <nav>
+            <a href="#dashboard" class="active">Overview</a>
+            <a href="#students">Students</a>
+            <a href="#admissions">Admissions</a>
+            <a href="#announcements">Announcements</a>
+            <a href="#" id="logoutBtn">Logout</a>
+        </nav>
+    </aside>
+
+    <main class="admin-main" id="dashboard">
+        <header class="admin-header">
+            <h1>Welcome, Information Officer</h1>
+            <p>School Records & Information Management</p>
+        </header>
+
+        <section class="stats-cards">
+            <div class="card">
+                <h3>Total Students</h3>
+                <p id="total-students">0</p>
+            </div>
+            <div class="card">
+                <h3>Pending Admissions</h3>
+                <p id="pending-admissions">0</p>
+            </div>
+            <div class="card">
+                <h3>Teachers</h3>
+                <p id="total-teachers">0</p>
+            </div>
+        </section>
+
+        <!-- STUDENTS SECTION -->
+        <section class="admin-section" id="students" style="display:none;">
+            <div class="section-header">
+                <h2>Student Records</h2>
+            </div>
+            <div class="payment-filters">
+                <input type="text" id="search-student" placeholder="Search Student..." style="width: 100%;">
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Class</th>
+                            <th>Gender</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ADMISSIONS SECTION -->
+        <section class="admin-section" id="admissions" style="display:none;">
+            <div class="section-header">
+                <h2>Manage Admissions</h2>
+            </div>
+            <div class="table-wrapper">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Applicant</th>
+                            <th>Class</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admissionsTableBody"></tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- ANNOUNCEMENTS SECTION -->
+        <section class="admin-section" id="announcements" style="display:none;">
+            <div class="section-header">
+                <h2>Announcements</h2>
+                <button class="btn primary" onclick="openAnnouncementModal()">+ New Announcement</button>
+            </div>
+            <div id="announcementList"></div>
+        </section>
+
+    </main>
+
+    <!-- SCRIPTS -->
+    <script src="js/data.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/info-office.js"></script>
+    <script>
+        document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.SchoolAuth.logout();
+        });
+    </script>
+</body>
+
+</html>

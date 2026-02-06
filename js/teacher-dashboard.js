@@ -62,7 +62,62 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
     };
 
+    // Load Announcements
+    const loadAnnouncements = () => {
+        const announcementSection = document.getElementById('announcements');
+        const listDiv = announcementSection.querySelector('.announcement-list');
+        if (!listDiv) return;
+
+        const allAnnouncements = SchoolData.getCollection('announcements');
+
+        // Filter: Everyone OR Teachers only
+        const myAnnouncements = allAnnouncements.filter(a =>
+            a.audience === 'Everyone' || a.audience === 'Teachers only'
+        );
+
+        if (myAnnouncements.length === 0) {
+            listDiv.innerHTML = '<p>No new announcements.</p>';
+            return;
+        }
+
+        listDiv.innerHTML = myAnnouncements.map(a => `
+            <div class="announcement-card" style="background:white; padding:15px; margin-bottom:15px; border-radius:8px; border-left: 4px solid #2b6cb0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <h4 style="margin:0; font-size:1.1em; color:#2d3748;">${a.title}</h4>
+                    <span style="font-size:0.85em; color:#718096;">${a.date}</span>
+                </div>
+                <p style="color:#4a5568; line-height:1.5;">${a.content}</p>
+                <div style="margin-top:10px; font-size:0.8em; color:#718096; font-weight:600;">
+                    Audience: ${a.audience}
+                </div>
+            </div>
+        `).join('');
+    };
+
+    // Navigation Logic
+    const linkAnnouncements = document.getElementById('link-announcements');
+    if (linkAnnouncements) {
+        linkAnnouncements.addEventListener('click', (e) => {
+            e.preventDefault();
+            // Simple Toggle for now, or hide others
+            document.getElementById('pupils-table').style.display = 'none';
+            document.getElementById('announcements').style.display = 'block';
+            loadAnnouncements();
+        });
+    }
+
+    // Default View (Pupils) - Ensure Pupils tab resets view if needed
+    const linkPupils = document.querySelector('a[href="#pupils-table"]');
+    if (linkPupils) {
+        linkPupils.addEventListener('click', (e) => {
+            // e.preventDefault(); // Let hash work, but ensure visibility
+            document.getElementById('announcements').style.display = 'none';
+            document.getElementById('pupils-table').style.display = 'block';
+        });
+    }
+
     // INIT
     loadStats();
     loadPupils();
+    loadAnnouncements(); // Preload or load on click? Load on init is fine.
 });

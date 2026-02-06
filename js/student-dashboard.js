@@ -130,11 +130,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadAnnouncements = () => {
         const list = document.getElementById('announcementList');
         const anns = SchoolData.getCollection('announcements');
-        if (anns.length === 0) {
+
+        // Filter: Everyone OR Pupils only
+        const myAnnouncements = anns.filter(a =>
+            a.audience === 'Everyone' || a.audience === 'Pupils only'
+        );
+
+        if (myAnnouncements.length === 0) {
             list.innerHTML = '<p>No announcements.</p>';
             return;
         }
-        list.innerHTML = anns.map(a => `
+        list.innerHTML = myAnnouncements.map(a => `
             <div class="announcement-item">
                 <h4>${a.title}</h4>
                 <p>${a.content}</p>
