@@ -45,23 +45,28 @@
       <div class="month-left">
         <label for="month">Select Month</label>
         <select id="month">
-          <option>January</option>
-          <option>February</option>
-          <option>March</option>
-          <option>April</option>
-          <option>May</option>
-          <option>June</option>
-          <option>July</option>
-          <option>August</option>
-          <option>September</option>
-          <option>October</option>
-          <option>November</option>
-          <option>December</option>
+          <option value="0">January</option>
+          <option value="1">February</option>
+          <option value="2">March</option>
+          <option value="3">April</option>
+          <option value="4">May</option>
+          <option value="5">June</option>
+          <option value="6">July</option>
+          <option value="7">August</option>
+          <option value="8">September</option>
+          <option value="9">October</option>
+          <option value="10">November</option>
+          <option value="11">December</option>
         </select>
       </div>
 
       <div class="month-right">
-        <span class="year">2026</span>
+        <label for="year-select" style="display:block; font-size:13px; color:#555; margin-bottom:5px;">Year</label>
+        <select id="year-select"
+          style="padding: 10px 14px; border-radius: 8px; border: 1px solid #ccc; font-size: 14px; cursor: pointer;">
+          <!-- Populated by JS -->
+          <option value="2026">2026</option>
+        </select>
       </div>
     </section>
 

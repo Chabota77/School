@@ -13,7 +13,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const classFilter = document.querySelectorAll('.payment-filters select')[0];
     const statusFilter = document.querySelectorAll('.payment-filters select')[1];
     const monthSelect = document.getElementById('month');
-    const yearSpan = document.querySelector('.month-right .year');
+    // const yearSpan = document.querySelector('.month-right .year'); // Deprecated
+
+    // Populate Years
+    const populateYearSelect = (transactions) => {
+        const yearSelect = document.getElementById('year-select');
+        if (!yearSelect) return;
+
+        // Extract unique years from transactions
+        const years = new Set([2026]); // Default
+        transactions.forEach(t => {
+            if (t.date) years.add(new Date(t.date).getFullYear());
+        });
+
+        const sortedYears = Array.from(years).sort((a, b) => b - a);
+        yearSelect.innerHTML = sortedYears.map(y => `<option value="${y}">${y}</option>`).join('');
+    };
 
     // Stats Elements
     const totalCollectedEl = document.querySelector('.summary-card h3');
@@ -69,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             if (res.ok) {
                 allTransactions = await res.json();
+                populateYearSelect(allTransactions);
                 updateMonthlyStats();
             }
         } catch (e) { console.error(e); }
@@ -136,17 +152,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Stats Logic
     const updateMonthlyStats = () => {
-        const monthIndex = monthSelect.selectedIndex; // 0 = Jan
-        const year = parseInt(yearSpan.innerText);
+        const monthIndex = parseInt(monthSelect.value); // Value is 0-11
+        // Use the dropdown for year if available, else fallback
+        const yearSelect = document.getElementById('year-select');
+        const year = yearSelect ? parseInt(yearSelect.value) : 2026;
 
         const monthlyTotal = allTransactions.filter(p => {
             // p.date format YYYY-MM-DD
             if (!p.date) return false;
             const d = new Date(p.date);
+            // JS months are 0-indexed
             return d.getMonth() === monthIndex && d.getFullYear() === year;
         }).reduce((sum, p) => sum + Number(p.amount), 0);
 
-        totalCollectedEl.innerHTML = `ZMW ${formatMoney(monthlyTotal)}<br><span style="font-size:0.6em; font-weight:normal;">Collected in ${monthSelect.value}</span>`;
+        const monthName = monthSelect.options[monthSelect.selectedIndex].text;
+        totalCollectedEl.innerHTML = `ZMW ${formatMoney(monthlyTotal)}<br><span style="font-size:0.6em; font-weight:normal;">Collected in ${monthName} ${year}</span>`;
     };
 
     // Add Payment Logic
@@ -250,6 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
     classFilter.addEventListener('change', filterAndRender);
     statusFilter.addEventListener('change', filterAndRender);
     monthSelect.addEventListener('change', updateMonthlyStats);
+    document.getElementById('year-select')?.addEventListener('change', updateMonthlyStats);
 
     // Close Modals
     document.querySelectorAll('.close-modal').forEach(btn => {

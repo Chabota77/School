@@ -36,14 +36,49 @@
     </nav>
   </header>
 
-  <!-- LOGIN HERO -->
-  <h1>Redirecting...</h1>
-  <p>Please wait while we direct you to the Student Login page.</p>
+  <!-- LOGIN PORTAL -->
+  <section class="login-container" style="padding: 100px 20px; text-align: center;">
+    <h1>Select Your Portal</h1>
+    <p style="margin-bottom: 40px; color: #666;">Please choose your role to proceed to the login page.</p>
 
-  <script>
-    // Redirect to student login by default
-    window.location.href = 'student-login.html';
-  </script>
+    <div class="portal-options" style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap;">
+
+      <a href="student-login.html" class="portal-card" style="text-decoration:none; color:inherit;">
+        <div
+          style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 250px; transition: transform 0.3s;">
+          <h3 style="color: #0c4e94; margin-bottom: 10px;">Student</h3>
+          <p style="font-size: 13px; color: #777;">Access results, assignments, and announcements.</p>
+          <button class="btn" style="margin-top: 20px; width: 100%;">Student Login</button>
+        </div>
+      </a>
+
+      <a href="teacher-login.html" class="portal-card" style="text-decoration:none; color:inherit;">
+        <div
+          style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 250px; transition: transform 0.3s;">
+          <h3 style="color: #10b981; margin-bottom: 10px;">Teacher</h3>
+          <p style="font-size: 13px; color: #777;">Manage classes, grades, and schedules.</p>
+          <button class="btn" style="margin-top: 20px; width: 100%; background: #10b981;">Teacher Login</button>
+        </div>
+      </a>
+
+      <a href="admin-login.html" class="portal-card" style="text-decoration:none; color:inherit;">
+        <div
+          style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 250px; transition: transform 0.3s;">
+          <h3 style="color: #dc2626; margin-bottom: 10px;">Administrator</h3>
+          <p style="font-size: 13px; color: #777;">Access the admin dashboard, finance, and settings.</p>
+          <button class="btn" style="margin-top: 20px; width: 100%; background: #dc2626;">Admin Login</button>
+        </div>
+      </a>
+
+    </div>
+  </section>
+
+  <style>
+    .portal-card:hover>div {
+      transform: translateY(-10px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+    }
+  </style>
 
   <p class="login-note" id="loginMessage"></p>
   </div>

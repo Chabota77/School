@@ -15,6 +15,13 @@ window.SchoolAuth = {
             const data = await response.json();
 
             if (response.ok) {
+                // Strict Role Check - User requested specific role login
+                const targetRole = data.user.role;
+                if (role && role !== targetRole) {
+                    window.SchoolUtils.showToast(`Login failed: You are a ${targetRole}, not a ${role}`, 'error');
+                    return false;
+                }
+
                 window.SchoolUtils.showToast('Login Successful! Redirecting...', 'success');
 
                 // Store Token and User Details
@@ -22,7 +29,6 @@ window.SchoolAuth = {
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
 
                 setTimeout(() => {
-                    const targetRole = data.user.role || role; // Use returned role or requested role
                     if (targetRole === 'admin') window.location.href = 'admin/dashboard.html';
                     else if (targetRole === 'teacher') window.location.href = 'teacher/dashboard.html';
                     else if (targetRole === 'student') window.location.href = 'student/dashboard.html';
@@ -43,19 +49,31 @@ window.SchoolAuth = {
     },
 
     logout: () => {
-        localStorage.removeItem('currentUser');
-        // Determine root path relative to current location
-        // Simple hack: if we are deep, go up.
-        // But for this project structure:
-        if (window.location.pathname.includes('/student/')) {
-            window.location.href = '../student-login.html';
-        } else if (window.location.pathname.includes('/teacher/')) {
-            window.location.href = '../teacher-login.html';
-        } else if (window.location.pathname.includes('/admin/')) {
-            window.location.href = '../teacher-login.html'; // Admin redirects to Teacher/Admin entry
+        const user = JSON.parse(localStorage.getItem('currentUser'));
+        let redirectUrl = '/login.html'; // Default fallback
+
+        if (user) {
+            if (['admin', 'accountant', 'info_officer'].includes(user.role)) {
+                redirectUrl = '/admin-login.html';
+            } else if (user.role === 'teacher') {
+                redirectUrl = '/teacher-login.html';
+            } else if (user.role === 'student') {
+                redirectUrl = '/student-login.html';
+            }
         } else {
-            window.location.href = 'student-login.html';
+            // If checking URL context if user object is gone
+            if (window.location.pathname.includes('/admin/') || window.location.pathname.includes('admin')) {
+                redirectUrl = '/admin-login.html';
+            } else if (window.location.pathname.includes('/teacher/') || window.location.pathname.includes('teacher')) {
+                redirectUrl = '/teacher-login.html';
+            } else if (window.location.pathname.includes('/student/') || window.location.pathname.includes('student')) {
+                redirectUrl = '/student-login.html';
+            }
         }
+
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('token');
+        window.location.href = redirectUrl;
     },
 
     requireAuth: (requiredRole) => {

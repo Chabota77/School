@@ -232,6 +232,8 @@
             </select>
           </div>
           <div class="form-actions" style="margin-top: 20px;">
+            <button type="button" class="btn cancel"
+              onclick="document.getElementById('addTeacherModal').checked = false">Cancel</button>
             <button type="submit" class="btn save">Save Teacher</button>
           </div>
         </form>
@@ -357,7 +359,7 @@
   <script src="../js/auth.js?v=5"></script>
   <script src="../js/reports.js?v=5"></script>
   <script src="../js/app.js?v=5"></script>
-  <script src="../js/admin-dashboard.js?v=7"></script>
+  <script src="../js/admin-dashboard.js?v=9"></script>
   <script>
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
       e.preventDefault();

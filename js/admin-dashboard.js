@@ -13,63 +13,91 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LOADERS ---
 
-    const loadHelpers = () => {
-        const classes = SchoolData.getClasses();
-        const subjects = SchoolData.getSubjects();
 
-        const populateSelects = (selector, data, defaultText) => {
-            const selects = document.querySelectorAll(selector);
-            selects.forEach(s => {
-                // Determine if filter or assignment
-                if (s.id.includes('filter')) {
-                    s.innerHTML = `<option value="">All ${defaultText}</option>` + data.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
-                } else {
-                    s.innerHTML = `<option value="">Select ${defaultText}</option>` + data.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
-                }
+    // --- API LOADERS ---
+
+    const loadHelpers = async () => {
+        try {
+            // Wait for DB data to be ensured via data.js (or fetch from API if we had endpoints for classes)
+            // For now, classes/subjects are static in SchoolData or API?
+            // Let's assume SchoolData still holds 'metadata' like classes/subjects which are rarely changed.
+            const classes = SchoolData.getClasses();
+            const subjects = SchoolData.getSubjects();
+
+            const populateSelects = (selector, data, defaultText) => {
+                const selects = document.querySelectorAll(selector);
+                selects.forEach(s => {
+                    if (s.id.includes('filter')) {
+                        s.innerHTML = `<option value="">All ${defaultText}</option>` + data.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+                    } else {
+                        s.innerHTML = `<option value="">Select ${defaultText}</option>` + data.map(i => `<option value="${i.name}">${i.name}</option>`).join('');
+                    }
+                });
+            };
+
+            // Specific targeting for Add Teacher Modal
+            const form = document.querySelector('#addTeacherModal + .modal form');
+            if (form) {
+                const selects = form.querySelectorAll('select');
+                // selects[0] is Subject, selects[1] is Class, selects[2] is Status
+                if (selects[0]) selects[0].innerHTML = `<option value="">Select Subject</option>` + subjects.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+                if (selects[1]) selects[1].innerHTML = `<option value="">Select Class</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            }
+
+            // Filters
+            const teacherFilter = document.getElementById('filter-teacher-class');
+            if (teacherFilter) teacherFilter.innerHTML = `<option value="">All Classes</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+
+            const admissionFilter = document.getElementById('filter-admission-class');
+            if (admissionFilter) admissionFilter.innerHTML = `<option value="">All Classes</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+
+        } catch (e) {
+            console.error("Error loading helpers", e);
+        }
+    };
+
+    const loadStats = async () => {
+        try {
+            // Parallel Fetch
+            const [teachersVs, studentsVs, admissionsVs] = await Promise.all([
+                fetch('/api/teachers').then(res => res.json()),
+                fetch('/api/students').then(res => res.json()), // We might need an endpoint for count
+                Promise.resolve(SchoolData.getCollection('admissions')) // Admissions still local? 
+                // Note: user asked to fix "Add Teacher" and "UI". 
+                // Let's stick to API for Teachers first.
+            ]);
+
+            // If /api/students doesn't exist yet, fallback to SchoolData
+            const studentCount = (Array.isArray(studentsVs) ? studentsVs.length : SchoolData.getCollection('students').length);
+            const teacherCount = (Array.isArray(teachersVs) ? teachersVs.length : 0);
+            const admissionCount = admissionsVs.filter(a => a.status === 'Pending').length;
+
+            const cards = Array.from(document.querySelectorAll('.card'));
+            cards.forEach(card => {
+                const title = card.querySelector('h3').textContent;
+                const val = card.querySelector('p');
+                if (title.includes('Students')) val.textContent = studentCount;
+                if (title.includes('Teachers')) val.textContent = teacherCount;
+                if (title.includes('Admissions')) val.textContent = admissionCount;
             });
-        };
-
-        // We have to be specific because selects are generic in the HTML
-        // Strategy: Attack specific IDs or context
-        const subjectSelects = document.querySelectorAll('select');
-        subjectSelects.forEach(s => {
-            // Heuristics based on existing HTML
-            if (s.innerHTML.includes('Select subject') || s.innerHTML.includes('Mathematics')) {
-                s.innerHTML = `<option value="">Select subject</option>` + subjects.map(sb => `<option value="${sb.name}">${sb.name}</option>`).join('');
-            }
-            if (s.innerHTML.includes('Select class') || s.innerHTML.includes('Grade 7A')) {
-                s.innerHTML = `<option value="">Select class</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-            }
-        });
-
-        // Filters
-        const teacherFilter = document.getElementById('filter-teacher-class');
-        if (teacherFilter) teacherFilter.innerHTML = `<option value="">All Classes</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-
-        const admissionFilter = document.getElementById('filter-admission-class');
-        if (admissionFilter) admissionFilter.innerHTML = `<option value="">All Classes</option>` + classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+        } catch (e) {
+            console.error("Stats load failed", e);
+        }
     };
 
-    const loadStats = () => {
-        const teachers = SchoolData.getCollection('teachers');
-        const students = SchoolData.getCollection('students');
-        const admissions = SchoolData.getCollection('admissions');
+    const loadTeachers = async () => {
+        const tbody = document.querySelector('.teachers-table tbody');
+        tbody.innerHTML = '<tr><td colspan="5">Loading teachers...</td></tr>';
 
-        // Update cards by content since they lack IDs
-        const cards = Array.from(document.querySelectorAll('.card'));
-        cards.forEach(card => {
-            const title = card.querySelector('h3').textContent;
-            const val = card.querySelector('p');
-            if (title.includes('Students')) val.textContent = students.length;
-            if (title.includes('Teachers')) val.textContent = teachers.length;
-            if (title.includes('Admissions')) val.textContent = admissions.filter(a => a.status === 'Pending').length;
-            if (title.includes('Messages')) val.textContent = '0'; // Mock
-        });
-    };
-
-    const loadTeachers = () => {
-        allTeachers = SchoolData.getCollection('teachers');
-        renderTeachers(allTeachers);
+        try {
+            const res = await fetch('/api/teachers');
+            if (!res.ok) throw new Error('Failed to fetch teachers');
+            allTeachers = await res.json();
+            renderTeachers(allTeachers);
+        } catch (e) {
+            console.error(e);
+            tbody.innerHTML = '<tr><td colspan="5" style="color:red">Error loading teachers.</td></tr>';
+        }
     };
 
     const renderTeachers = (data) => {
@@ -77,21 +105,25 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        if (data.length === 0) {
+        if (!data || data.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No teachers found.</td></tr>';
             return;
         }
 
         data.forEach(t => {
             const tr = document.createElement('tr');
+            // Ensure properties match API response (snake_case from DB usually, but our API might return mixed?)
+            // Check server.js /api/teachers response format. It does `SELECT * FROM teachers`, so snake_case keys or sqlite default.
+            // sqlite default is usually col name.
+
             tr.innerHTML = `
                 <td>${t.name}</td>
-                <td>${t.subject || 'N/A'}</td>
-                <td>${t.class || 'N/A'}</td>
+                 <!-- We need to resolve IDs to Names if the DB returns IDs -->
+                <td>${t.email}</td> 
+                <td>${t.phone || 'N/A'}</td>
                 <td><span class="status ${t.status === 'Active' ? 'active' : 'leave'}">${t.status}</span></td>
                 <td class="actions">
-                    <button class="btn message" onclick="alert('Message feature coming soon')">Message</button>
-                    <button class="btn edit" onclick='editTeacher("${t.id}")'>Edit</button>
+                    <button class="btn edit" onclick='editTeacher(${JSON.stringify(t)})'>Edit</button>
                     <button class="btn delete" onclick="deleteTeacher('${t.id}')">Delete</button>
                 </td>
             `;
@@ -185,17 +217,61 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- ACTIONS ---
 
     // Expose to window for inline onclicks
-    window.deleteTeacher = (id) => {
-        console.log('Attempting to delete teacher with ID:', id);
-        if (confirm('Delete this teacher?')) {
-            console.log('User confirmed deletion.');
-            SchoolData.deleteItem('teachers', id);
-            loadTeachers();
-            loadStats();
-        } else {
-            console.log('User cancelled deletion.');
+    window.deleteTeacher = async (id) => {
+        if (confirm('Delete this teacher? This will also remove their access.')) {
+            try {
+                const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    alert('Teacher deleted');
+                    loadTeachers();
+                    loadStats();
+                } else {
+                    alert('Failed to delete teacher');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network error');
+            }
         }
     };
+
+    window.editTeacher = (teacher) => {
+        // Teacher object is passed directly or we fetch it. 
+        // Note: The previous code passed "id" but we injected object in render.
+        // If passed as object from render: onclick='editTeacher(${JSON.stringify(t)})'
+
+        // Populate Modal
+        const modalToCheck = document.getElementById('addTeacherModal');
+        const form = document.querySelector('#addTeacherModal + .modal form');
+
+        let t = teacher;
+        // If it was just an ID string (legacy compat)
+        if (typeof teacher === 'string' || typeof teacher === 'number') {
+            t = allTeachers.find(x => x.id == teacher);
+        }
+
+        if (!t) return;
+
+        // Inputs
+        const inputs = form.querySelectorAll('input');
+        if (inputs[0]) inputs[0].value = t.name;
+        if (inputs[1]) inputs[1].value = t.email;
+        if (inputs[2]) inputs[2].value = ''; // Don't show password
+        if (inputs[3]) inputs[3].value = t.phone;
+
+        const selects = form.querySelectorAll('select');
+        // We might not have these fields in the API response yet (subject/class might be null or text)
+        if (selects[0]) selects[0].value = t.subject || ''; // Assuming text match
+        if (selects[1]) selects[1].value = t.class || '';
+        if (selects[2]) selects[2].value = t.status || 'Active';
+
+        // Attach ID
+        form.dataset.updateId = t.id;
+
+        modalToCheck.checked = true;
+    };
+
+    // --- LEGACY/LOCAL STORAGE ADAPTERS (Announcements, etc - keep local for now as per instructions to only fix specific things) ---
 
     // Helper: Download Acceptance Letter
     window.downloadAdmissionLetter = (id) => {
@@ -299,50 +375,24 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    window.editTeacher = (id) => {
-        const t = allTeachers.find(t => t.id == id);
-        if (!t) return;
 
-        // Populate Modal
-        const modalToCheck = document.getElementById('addTeacherModal');
-        const form = document.querySelector('#addTeacherModal + .modal form');
-
-        // Inputs
-        const inputs = form.querySelectorAll('input');
-        inputs[0].value = t.name;
-        inputs[1].value = t.email;
-        inputs[3].value = t.phone; // skipping password [2]
-
-        const selects = form.querySelectorAll('select');
-        selects[0].value = t.subject;
-        selects[1].value = t.class;
-        selects[2].value = t.status;
-
-        // Change button to valid 'Update' state or handle logic
-        // For simplicity, we delete old and add new on save, or use updateItem
-        // Let's attach the ID to the form
-        form.dataset.updateId = id;
-
-        modalToCheck.checked = true;
-    };
+    // --- EVENT LISTENERS ---
 
     // --- EVENT LISTENERS ---
 
     // Add Teacher
     const saveTeacherBtn = document.querySelector('#addTeacherModal + .modal .btn.save');
     if (saveTeacherBtn) {
-        // Remove old listeners (by cloning? No, just replace logic)
-        // app.js might have added one. We should prioritize this script.
-
-        saveTeacherBtn.onclick = (e) => {
+        saveTeacherBtn.onclick = async (e) => {
             e.preventDefault();
             const form = document.querySelector('#addTeacherModal + .modal form');
             const inputs = form.querySelectorAll('input');
             const selects = form.querySelectorAll('select');
+            const btn = e.target;
 
             const name = inputs[0].value;
             const email = inputs[1].value;
-            const password = inputs[2].value; // validation needed?
+            const password = inputs[2].value; // New teacher password
             const phone = inputs[3].value;
 
             if (!email || !name) {
@@ -350,79 +400,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            // 1. Manage User Account (Login)
-            let userId = null;
-            const users = SchoolData.getCollection('users');
+            btn.textContent = 'Saving...';
+            btn.disabled = true;
 
-            // Search for existing user by email (username)
-            let existingUser = users.find(u => u.username === email || u.username === email.toLowerCase());
+            try {
+                // Prepare Payload
+                const payload = {
+                    name, email, phone,
+                    // subject_id: selects[0].value, // If we were using IDs
+                    // class_id: selects[1].value,
+                    status: selects[2].value,
+                    password: password || undefined // Only send if provided
+                };
 
-            if (form.dataset.updateId) {
-                // EDIT MODE
-                const teacher = SchoolData.getCollection('teachers').find(t => t.id == form.dataset.updateId);
-                if (teacher && teacher.userId) {
-                    existingUser = users.find(u => u.id === teacher.userId);
+                let url = '/api/teachers';
+                let method = 'POST';
+
+                if (form.dataset.updateId) {
+                    url = `/api/teachers/${form.dataset.updateId}`;
+                    method = 'PUT';
                 }
 
-                if (existingUser) {
-                    // Update credentials
-                    SchoolData.updateItem('users', existingUser.id, {
-                        username: email, // sync email change
-                        password: password || existingUser.password, // only update if provided
-                        name: name
-                    });
-                    userId = existingUser.id;
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    alert(form.dataset.updateId ? 'Teacher updated successfully' : 'Teacher created successfully');
+                    document.getElementById('addTeacherModal').checked = false;
+                    form.reset();
+                    delete form.dataset.updateId;
+                    loadTeachers();
+                    loadStats();
                 } else {
-                    // Create if missing
-                    const newUser = SchoolData.addItem('users', {
-                        username: email,
-                        password: password || 'password',
-                        role: 'teacher',
-                        name: name
-                    });
-                    userId = newUser.id;
+                    const err = await res.json();
+                    alert('Error: ' + (err.error || 'Failed to save teacher'));
                 }
 
-                // Update Teacher
-                SchoolData.updateItem('teachers', form.dataset.updateId, {
-                    name, email, phone,
-                    subject: selects[0].value,
-                    class: selects[1].value,
-                    status: selects[2].value,
-                    userId: userId // ensure link
-                });
-                delete form.dataset.updateId;
-
-            } else {
-                // ADD MODE
-                if (existingUser) {
-                    alert('A user with this email already exists.');
-                    return;
-                }
-
-                const newUser = SchoolData.addItem('users', {
-                    username: email,
-                    password: password || 'password',
-                    role: 'teacher',
-                    name: name
-                });
-                userId = newUser.id;
-
-                // Create Teacher
-                SchoolData.addItem('teachers', {
-                    name, email, phone,
-                    subject: selects[0].value,
-                    class: selects[1].value,
-                    status: selects[2].value,
-                    userId: userId
-                });
+            } catch (err) {
+                console.error(err);
+                alert('Network Error');
+            } finally {
+                btn.textContent = 'Save Teacher';
+                btn.disabled = false;
             }
-
-            document.getElementById('addTeacherModal').checked = false;
-            form.reset();
-            loadTeachers();
-            loadStats();
-            if (window.SchoolUtils) window.SchoolUtils.showToast('Teacher saved with login credentials.', 'success');
         };
     }
 

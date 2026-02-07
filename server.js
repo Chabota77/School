@@ -142,6 +142,20 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(401).json({ message: 'Access denied. Account not set up.' });
         }
 
+        // --- NEW STRICT CHECK ---
+        if (table === 'admins') {
+            let dbRole = 'admin'; // Default
+
+            // Explicit Mapping
+            if (user.username === 'account') dbRole = 'accountant';
+            else if (user.username === 'info') dbRole = 'info_officer';
+
+            if (role !== dbRole) {
+                console.log(`Login failed: Role mismatch. User is ${dbRole} but requested ${role}`);
+                return res.status(403).json({ message: `Access denied. You are not a ${role}.` });
+            }
+        }
+
         let isMatch = false;
         try {
             if (user.password.startsWith('$2b$')) {
