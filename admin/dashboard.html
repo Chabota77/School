@@ -65,47 +65,40 @@
     <!-- ANNOUNCEMENTS PANEL -->
 
     <!-- ANNOUNCEMENTS SECTION -->
+    <!-- ANNOUNCEMENTS SECTION -->
     <section class="admin-announcements" id="announcement">
-      <h2>School Announcements</h2>
+      <div class="announcements-container">
 
-      <!-- CREATE ANNOUNCEMENT -->
-      <div class="announcement-form">
-        <h3>Create Announcement</h3>
-
-        <input type="text" placeholder="Announcement title">
-
-        <select>
-          <option value="Everyone">Send to: Everyone</option>
-          <option value="Teachers only">Teachers only</option>
-          <option value="Pupils only">Pupils only</option>
-        </select>
-
-        <textarea rows="4" placeholder="Write your announcement here..."></textarea>
-
-        <button class="btn primary">Post Announcement</button>
-      </div>
-
-      <!-- ANNOUNCEMENT LIST -->
-      <div class="announcement-list">
-        <h3>Recent Announcements</h3>
-        <!-- List code is truncated here in replace content, I should be careful not to delete existing rows if I don't mean to.
-             Wait, I am replacing a huge block. I need to be careful.
-             The TargetContent shows I am replacing from Sidebar to End of Teachers Section.
-             Let me Re-Verify the TargetContent.
-        -->
-        <div class="announcement-card">
-          <div class="announcement-header">
-            <h4>School Reopening</h4>
-
-            <div class="announcement-actions">
-              <button class="edit-btn">Edit</button>
-              <button class="delete-btn">Delete</button>
-            </div>
+        <!-- CREATE ANNOUNCEMENT (Left Column) -->
+        <div class="announcement-form-card">
+          <h3>Create Announcement</h3>
+          <div class="form-group">
+            <label>Title:</label>
+            <input type="text" id="ann-title" placeholder="Enter Title">
           </div>
-
-          <p>School will reopen on Monday. All pupils should be in full uniform.</p>
-          <span>Audience: Everyone • 10 Jan 2026</span>
+          <div class="form-group">
+            <label>Audience:</label>
+            <select id="ann-audience">
+              <option value="Everyone">Everyone</option>
+              <option value="Teachers">Teachers only</option>
+              <option value="Pupils">Pupils only</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Message:</label>
+            <textarea id="ann-content" rows="6" placeholder="Enter message"></textarea>
+          </div>
+          <button class="btn primary" id="post-announcement-btn">Submit &rarr;</button>
         </div>
+
+        <!-- ANNOUNCEMENT LIST (Right Column) -->
+        <div class="announcement-list-section">
+          <h3>Recent Announcements</h3>
+          <div class="announcement-grid" id="announcement-list-container">
+            <!-- Dynamic Cards will be injected here -->
+          </div>
+        </div>
+
       </div>
     </section>
 
@@ -359,7 +352,7 @@
   <script src="../js/auth.js?v=5"></script>
   <script src="../js/reports.js?v=5"></script>
   <script src="../js/app.js?v=5"></script>
-  <script src="../js/admin-dashboard.js?v=9"></script>
+  <script src="../js/admin-dashboard.js?v=10"></script>
   <script>
     document.getElementById('logoutBtn')?.addEventListener('click', (e) => {
       e.preventDefault();

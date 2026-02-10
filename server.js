@@ -26,7 +26,21 @@ app.use(express.static(path.join(__dirname, '/')));
 const dbPath = path.join(__dirname, 'school.db');
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error('Error connecting to database:', err.message);
-    else console.log('Connected to SQLite database.');
+    else {
+        console.log('Connected to SQLite database.');
+        // Seed Classes if empty
+        db.get("SELECT COUNT(*) as count FROM classes", (err, row) => {
+            if (!err && row.count === 0) {
+                console.log("Seeding classes...");
+                const stmt = db.prepare("INSERT INTO classes (name) VALUES (?)");
+                stmt.run("Grade 7A");
+                stmt.run("Grade 7B");
+                stmt.run("Grade 8A");
+                stmt.run("Grade 9B");
+                stmt.finalize();
+            }
+        });
+    }
 });
 
 // Helper to mimic mysql db.query style
@@ -309,11 +323,23 @@ app.get('/api/students', authenticateToken, (req, res) => {
 
 // Add new student
 app.post('/api/students', authenticateToken, (req, res) => {
-    const { name, age, gender, class_id, status } = req.body; // Added gender
-    const query = 'INSERT INTO students (name, age, gender, class_id, status) VALUES (?, ?, ?, ?, ?)';
-    db.query(query, [name, age, gender, class_id, status || 'Enrolled'], (err, results) => {
+    const { name, age, gender, class_id, status } = req.body;
+
+    // Check for duplicates first
+    const checkQuery = 'SELECT id FROM students WHERE name = ? AND class_id = ?';
+    db.query(checkQuery, [name, class_id || null], (err, existing) => {
         if (err) return res.status(500).json({ error: err.message });
-        res.status(201).json({ message: 'Student added successfully', id: results.insertId });
+
+        if (existing.length > 0) {
+            // Already exists, return the existing ID (idempotent)
+            return res.json({ message: 'Student already exists', id: existing[0].id });
+        }
+
+        const query = 'INSERT INTO students (name, age, gender, class_id, status) VALUES (?, ?, ?, ?, ?)';
+        db.query(query, [name, age, gender, class_id, status || 'Enrolled'], (err, results) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.status(201).json({ message: 'Student added successfully', id: results.insertId });
+        });
     });
 });
 
@@ -607,6 +633,16 @@ app.get('/api/public/results', (req, res) => {
 
 // --- PAYMENT ROUTES ---
 
+// Get All Payment Transactions (For Monthly Stats)
+app.get('/api/payments/transactions', authenticateToken, (req, res) => {
+    const query = 'SELECT * FROM payments ORDER BY date DESC';
+    db.query(query, (err, results) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(results);
+    });
+});
+
+
 // Get Payment Summary (All Students)
 app.get('/api/payments', authenticateToken, (req, res) => {
     const query = `
@@ -615,23 +651,29 @@ app.get('/api/payments', authenticateToken, (req, res) => {
             c.name as class_name, c.term_fee,
             COALESCE(SUM(p.amount), 0) as total_paid
         FROM students s
-        JOIN classes c ON s.class_id = c.id
+        LEFT JOIN classes c ON s.class_id = c.id
         LEFT JOIN payments p ON s.id = p.student_id
         GROUP BY s.id
     `;
     db.query(query, (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
 
-        const summary = results.map(row => ({
-            id: row.id,
-            name: row.name,
-            roll_no: (row.roll_no || row.id) + 2500000,
-            class_name: row.class_name,
-            total_fees: row.term_fee,
-            paid: row.total_paid,
-            balance: row.term_fee - row.total_paid,
-            status: (row.term_fee - row.total_paid) <= 0 ? 'Paid' : (row.total_paid > 0 ? 'Partial' : 'Unpaid')
-        }));
+        const summary = results.map(row => {
+            const termFee = row.term_fee || 3000; // Default to 3000 if class fee missing
+            const paid = row.total_paid || 0;
+            const balance = termFee - paid;
+
+            return {
+                id: row.id,
+                name: row.name,
+                roll_no: (row.roll_no || row.id) + 2500000,
+                class_name: row.class_name || '-',
+                total_fees: termFee,
+                paid: paid,
+                balance: balance,
+                status: balance <= 0 ? 'Paid' : (paid > 0 ? 'Partial' : 'Unpaid')
+            };
+        });
         res.json(summary);
     });
 });

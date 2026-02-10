@@ -1127,4 +1127,178 @@ body {
   border-color: #991b1b;
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(220, 38, 38, 0.4);
+}. 
+ 
+ 
+/* ANNOUNCEMENTS UI IMPROVEMENTS (MOCKUP MATCH) */
+
+.admin-announcements {
+    padding: 40px;
+    background: white; /* Clean background */
+    min-height: 80vh;
 }
+
+.announcements-container {
+    max-width: 700px; /* Narrower container as per mockup */
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+}
+
+/* Form Styles */
+.announcement-form-card {
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    border: none;
+}
+
+.announcement-form-card h3 {
+    text-align: left;
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.announcement-form-card .form-group {
+    margin-bottom: 25px;
+}
+
+.announcement-form-card label {
+    display: block;
+    margin-bottom: 10px;
+    color: #2d3748;
+    font-size: 1rem;
+    font-weight: 500;
+    margin-left: 5px;
+}
+
+.announcement-form-card input,
+.announcement-form-card select,
+.announcement-form-card textarea {
+    width: 100%;
+    padding: 16px 24px;
+    background: #f3f4f6;
+    border: 1px solid transparent;
+    border-radius: 50px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+.announcement-form-card textarea {
+    border-radius: 25px;
+    resize: vertical;
+}
+
+.announcement-form-card input:focus,
+.announcement-form-card select:focus,
+.announcement-form-card textarea:focus {
+    outline: none;
+    background: white;
+    border-color: #e2e8f0;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+/* Submit Button - Teal Pill */
+.announcement-form-card button#post-announcement-btn {
+    display: block;
+    width: 180px;
+    margin: 30px auto 0;
+    padding: 14px 0;
+    background: #0d9488;
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+    text-align: center;
+}
+
+.announcement-form-card button#post-announcement-btn:hover {
+    background: #0f766e;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+}
+
+/* List Styles */
+.announcement-list-section {
+    width: 100%;
+    margin-top: 20px;
+    border-top: 1px solid #f1f5f9;
+    padding-top: 40px;
+}
+
+.announcement-list-section h3 {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 30px;
+}
+
+.announcement-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.announcement-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    border: 1px solid #f1f5f9;
+}
+
+/* FINANCIAL REPORTS */
+.reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.report-table th {
+    text-align: left;
+    padding: 12px;
+    color: #64748b;
+    font-weight: 600;
+    font-size: 0.85rem;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.report-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f8fafc;
+    font-size: 0.9rem;
+    color: #334155;
+}
+
+.report-table tr:last-child td {
+    border-bottom: none;
+}
+
+#paymentMethodsList li {
+    padding: 8px 0;
+}
+
+#monthlyTrendChart .bar {
+    transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+#monthlyTrendChart .bar:hover {
+    filter: brightness(1.1);
+}
+

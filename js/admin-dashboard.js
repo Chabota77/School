@@ -58,13 +58,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadStats = async () => {
         try {
+            const headers = { 'Authorization': `Bearer ${localStorage.getItem('token')}` };
             // Parallel Fetch
             const [teachersVs, studentsVs, admissionsVs] = await Promise.all([
-                fetch('/api/teachers').then(res => res.json()),
-                fetch('/api/students').then(res => res.json()), // We might need an endpoint for count
-                Promise.resolve(SchoolData.getCollection('admissions')) // Admissions still local? 
-                // Note: user asked to fix "Add Teacher" and "UI". 
-                // Let's stick to API for Teachers first.
+                fetch('/api/teachers', { headers }).then(res => {
+                    if (!res.ok) throw new Error(`Teachers: ${res.statusText}`);
+                    return res.json();
+                }),
+                fetch('/api/students', { headers }).then(res => {
+                    if (!res.ok) throw new Error(`Students: ${res.statusText}`);
+                    return res.json();
+                }),
+                Promise.resolve(SchoolData.getCollection('admissions'))
             ]);
 
             // If /api/students doesn't exist yet, fallback to SchoolData
@@ -90,7 +95,9 @@ document.addEventListener('DOMContentLoaded', () => {
         tbody.innerHTML = '<tr><td colspan="5">Loading teachers...</td></tr>';
 
         try {
-            const res = await fetch('/api/teachers');
+            const res = await fetch('/api/teachers', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
             if (!res.ok) throw new Error('Failed to fetch teachers');
             allTeachers = await res.json();
             renderTeachers(allTeachers);
@@ -183,30 +190,38 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const loadAnnouncements = () => {
         const announcements = SchoolData.getCollection('announcements');
-        const section = document.getElementById('announcement');
-        if (!section) return;
-
-        const list = section.querySelector('.announcement-list');
+        const list = document.getElementById('announcement-list-container');
         if (!list) return;
 
-        // Reset list content, keep the form which is a sibling
-        list.innerHTML = '<h3>Recent Announcements</h3>';
+        list.innerHTML = '';
+
+        if (announcements.length === 0) {
+            list.innerHTML = '<p style="color:#64748b; font-style:italic;">No announcements posted.</p>';
+            return;
+        }
 
         announcements.forEach(a => {
             const div = document.createElement('div');
-            div.className = 'announcement-card';
+            // Determine audience class
+            let audClass = 'audience-everyone';
+            if (a.audience === 'Teachers' || a.audience === 'Teachers only') audClass = 'audience-teachers';
+            else if (a.audience === 'Pupils' || a.audience === 'Pupils only') audClass = 'audience-pupils';
+
+            div.className = `announcement-card ${audClass}`;
             div.innerHTML = `
                 <div class="announcement-header">
                     <h4>${a.title}</h4>
-                    <div class="announcement-actions">
-                         <button class="delete-btn" onclick="deleteAnnouncement('${a.id}')"><i class="fas fa-trash"></i> Delete</button>
-                    </div>
+                    <button class="delete-btn-icon" onclick="deleteAnnouncement('${a.id}')" title="Delete">
+                        <i class="fas fa-trash"></i> &#128465;
+                    </button>
                 </div>
                 <div class="announcement-body">
                     <p>${a.content}</p>
                 </div>
                 <div class="announcement-meta">
-                    <span>${a.audience || 'Everyone'}</span>
+                    <div class="meta-badges">
+                        <span class="badge audience">${a.audience || 'Everyone'}</span>
+                    </div>
                     <span>${a.date}</span>
                 </div>
             `;
@@ -338,7 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const classes = SchoolData.getClasses();
                 const cls = classes.find(c => c.name === adm.class_name) || classes[0];
 
-                // 2. Create User
+                // 2. Create User (Local - kept for compatibility)
                 const newUser = {
                     username: adm.student_name.toLowerCase().replace(/\s+/g, ''),
                     password: 'password', // Default
@@ -347,8 +362,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
                 const createdUser = SchoolData.addItem('users', newUser);
 
-                // 3. Create Student linked to User
-                // Use new Auto-ID logic available in data.js
+                // 3. Create Student linked to User (Local)
                 SchoolData.addStudent({
                     userId: createdUser.id, // LINKED
                     name: adm.student_name,
@@ -359,7 +373,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     email: adm.email
                 });
 
-                // 4. Auto-Download Letter
+                // 4. SYNC TO BACKEND (Fix for Stats/Payments)
+                // We send this to the API so it appears in SQLite-based views (Payments, Stats)
+                // FIRST: Fetch classes from backend to get the real Integer ID, not the string ID
+                fetch('/api/classes')
+                    .then(res => res.json())
+                    .then(backendClasses => {
+                        const backendClass = backendClasses.find(c => c.name === adm.class_name);
+                        const realClassId = backendClass ? backendClass.id : null;
+
+                        const apiPayload = {
+                            name: adm.student_name,
+                            age: adm.age || 0, // Fallback
+                            gender: adm.gender || 'Not Specified',
+                            class_id: realClassId || cls.id, // Prefer backend ID, fallback to local (though local is likely string)
+                            status: 'Enrolled'
+                        };
+
+                        return fetch('/api/students', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                            },
+                            body: JSON.stringify(apiPayload)
+                        });
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('Student synced to backend:', data);
+                        loadStats(); // Reload stats after backend sync
+                    })
+                    .catch(err => console.error('Failed to sync student to backend:', err));
+
+                // 5. Auto-Download Letter
                 downloadAdmissionLetter(id);
 
                 if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
@@ -450,24 +497,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Post Announcement
-    const postAnnounceBtn = document.querySelector('.announcement-form .btn.primary');
+    // Post Announcement
+    const postAnnounceBtn = document.getElementById('post-announcement-btn');
     if (postAnnounceBtn) {
-        postAnnounceBtn.onclick = (e) => {
+        postAnnounceBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const pd = document.querySelector('.announcement-form');
-            const title = pd.querySelector('input').value;
-            const audience = pd.querySelector('select').value;
-            const content = pd.querySelector('textarea').value;
+            const titleInput = document.getElementById('ann-title');
+            const audienceInput = document.getElementById('ann-audience');
+            const contentInput = document.getElementById('ann-content');
+
+            const title = titleInput.value;
+            const audience = audienceInput.value;
+            const content = contentInput.value;
 
             if (title && content) {
+                // Post to API if available, else local
+                // Assuming local for now as per previous code
                 SchoolData.addItem('announcements', {
                     title, audience, content, date: new Date().toISOString().split('T')[0]
                 });
-                pd.querySelector('input').value = '';
-                pd.querySelector('textarea').value = '';
+
+                titleInput.value = '';
+                contentInput.value = '';
                 loadAnnouncements();
+
+                alert('Announcement posted successfully!');
+            } else {
+                alert('Please fill in title and content.');
             }
-        };
+        });
     }
 
     // Filters

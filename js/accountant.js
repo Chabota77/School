@@ -164,7 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Exposed Actions
     window.openAddPaymentForStudent = (id, name, cls) => {
         document.getElementById('paymentModal').checked = true;
-        document.getElementById('payStudentId').value = Number(id) + 2500000; // Display Roll No
+        const input = document.getElementById('payStudentId');
+        input.value = Number(id) + 2500000; // Display Roll No
+        input.dataset.realId = id; // Store Real ID for submission
+
+        // Also update the helper text
+        const nameDisplay = document.getElementById('studentNameDisplay');
+        if (nameDisplay) nameDisplay.textContent = name;
     };
 
     window.viewHistory = async (id, name) => {
@@ -255,11 +261,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
         tbody.innerHTML = '';
 
-        // Aggregate allPayments (summary) by Class
-        // allPayments items: { class_name, total_fees, paid, balance ... }
-
+        // 1. Class Summary
         const classStats = {};
-
         allPayments.forEach(p => {
             const cls = p.class_name || 'Unknown';
             if (!classStats[cls]) classStats[cls] = { expected: 0, collected: 0, balance: 0 };
@@ -274,12 +277,96 @@ document.addEventListener('DOMContentLoaded', () => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${cls}</td>
-                <td>${stat.expected.toLocaleString()}</td>
-                <td>${stat.collected.toLocaleString()}</td>
-                <td>${stat.balance.toLocaleString()}</td>
+                <td style="text-align:right">ZMW ${stat.expected.toLocaleString()}</td>
+                <td style="text-align:right">ZMW ${stat.collected.toLocaleString()}</td>
+                <td style="text-align:right">ZMW ${stat.balance.toLocaleString()}</td>
             `;
             tbody.appendChild(tr);
         });
+
+        // 2. Top Defaulters
+        const defaultersBody = document.getElementById('defaultersReportBody');
+        if (defaultersBody) {
+            const topDefaulters = [...allPayments]
+                .sort((a, b) => b.balance - a.balance)
+                .slice(0, 5); // Top 5
+
+            defaultersBody.innerHTML = topDefaulters.map(s => `
+                <tr>
+                    <td>${s.name}</td>
+                    <td>${s.class_name}</td>
+                    <td style="text-align:right; color:red; font-weight:bold;">ZMW ${s.balance.toLocaleString()}</td>
+                </tr>
+             `).join('');
+        }
+
+        // 3. Payment Methods & Monthly Trends
+        // Requires Transaction Data. 
+        // We fetch it once here to avoid multiple calls, or use a separate endpoint if heavy.
+        fetch('/api/payments/transactions', {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        })
+            .then(res => res.json())
+            .then(transactions => {
+                renderPaymentMethods(transactions);
+                renderMonthlyTrends(transactions);
+            })
+            .catch(err => console.error("Error loading report details", err));
+    }
+
+    function renderPaymentMethods(transactions) {
+        const methods = {};
+        let total = 0;
+        transactions.forEach(t => {
+            const m = t.method || 'Cash';
+            methods[m] = (methods[m] || 0) + t.amount;
+            total += t.amount;
+        });
+
+        const container = document.getElementById('paymentMethodsList');
+        if (container) {
+            container.innerHTML = Object.entries(methods).map(([method, amount]) => {
+                const pct = total ? Math.round((amount / total) * 100) : 0;
+                return `
+                <li style="margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight:600;">${method}</span>
+                    <span style="background: #eef2ff; padding: 2px 8px; border-radius: 4px; font-size: 0.9em;">
+                        ZMW ${amount.toLocaleString()} (${pct}%)
+                    </span>
+                </li>
+                <li style="height: 6px; background: #f1f5f9; border-radius: 3px; overflow: hidden; margin-bottom: 15px;">
+                     <div style="height: 100%; width: ${pct}%; background: #3b82f6;"></div>
+                </li>
+                `;
+            }).join('');
+        }
+    }
+
+    function renderMonthlyTrends(transactions) {
+        const container = document.getElementById('monthlyTrendChart');
+        if (!container) return;
+
+        // Group by month (0-11)
+        const monthly = new Array(12).fill(0);
+        transactions.forEach(t => {
+            const d = new Date(t.date);
+            if (d.getFullYear() === 2026) { // Filter for current year
+                monthly[d.getMonth()] += t.amount;
+            }
+        });
+
+        const max = Math.max(...monthly) || 1000;
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        container.innerHTML = monthly.map((amount, idx) => {
+            const height = amount ? Math.max(10, Math.round((amount / max) * 100)) : 0;
+            return `
+                <div style="flex: 1; text-align: center; font-size: 0.7em;">
+                    <div style="height: ${height}%; background: #10b981; border-radius: 4px 4px 0 0; min-height: ${amount ? 4 : 0}px; transition: height 0.3s;" title="ZMW ${amount.toLocaleString()}"></div>
+                    <div style="margin-top: 5px; color: #64748b;">${months[idx]}</div>
+                </div>
+            `;
+        }).join('');
     }
 
     // --- ACTIONS ---
@@ -295,14 +382,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- EVENTS ---
     function setupEventListeners() {
-        // Auto-fill Student Name
+        // Auto-fill Student Name and Resolve ID
         const idInput = document.getElementById('payStudentId');
         if (idInput) {
-            idInput.addEventListener('blur', (e) => {
-                // We can check against loaded students list if we stored it?
-                // Or just clear validity. 
-                // Currently loadStudents renders but doesn't store globally.
-                // Let's rely on backend validation for now or simple check.
+            idInput.addEventListener('input', (e) => {
+                const val = e.target.value;
+                // Try to find student in allSummaries
+                // Roll No = ID + 2500000
+                // So ID = Roll No - 2500000
+                const potentialId = Number(val) - 2500000;
+                const student = allSummaries.find(s => s.id == potentialId);
+
+                const nameDisplay = document.getElementById('studentNameDisplay');
+
+                if (student) {
+                    nameDisplay.textContent = student.name;
+                    nameDisplay.style.color = 'green';
+                    idInput.dataset.realId = student.id;
+                } else {
+                    nameDisplay.textContent = 'Student not found';
+                    nameDisplay.style.color = 'red';
+                    delete idInput.dataset.realId;
+                }
             });
         }
 
@@ -312,12 +413,30 @@ document.addEventListener('DOMContentLoaded', () => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
-                const studentId = document.getElementById('payStudentId').value;
+                // FIX: Get the real Student ID from the data attribute, not the Roll No value
+                const studentIdInput = document.getElementById('payStudentId');
+                const realStudentId = studentIdInput.dataset.realId;
+
+                // Fallback: If no realId (manual entry), try to parse it or use value (risky if roll no)
+                // If user typed a Roll No (2500xxx), we need to revert it? 
+                // Better: Only allow selecting from valid students or handle the math.
+                // Current flow: openAddPaymentForStudent sets value. 
+                // Let's rely on data-real-id being set by that function.
+
                 const amount = document.getElementById('payAmount').value;
                 const year = document.getElementById('payYear').options[document.getElementById('payYear').selectedIndex]?.text || 2026;
                 const term = document.getElementById('payTerm').options[document.getElementById('payTerm').selectedIndex]?.text || 'Term 1';
                 const method = document.getElementById('payMethod').value;
                 const token = localStorage.getItem('token');
+
+                if (!realStudentId) {
+                    // Try to resolve from input value if it matches a known student
+                    // converting roll no back to id: 2600001 -> 1 ... wait, logic was (id + 2500000)
+                    // limit: we should probably enforce selection.
+                    // For now, let's try to infer if it looks like a roll no.
+                    SchoolUtils.showToast('Please select a student from the list or ensure ID is valid.', 'error');
+                    return;
+                }
 
                 try {
                     const response = await fetch('/api/payments', {
@@ -327,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             'Authorization': `Bearer ${token}`
                         },
                         body: JSON.stringify({
-                            student_id: studentId,
+                            student_id: realStudentId,
                             amount: amount,
                             date: new Date().toISOString().split('T')[0],
                             term: term,
@@ -340,6 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         SchoolUtils.showToast('Payment Record Saved', 'success');
                         document.getElementById('paymentModal').checked = false;
                         form.reset();
+                        delete studentIdInput.dataset.realId; // Clear
                         loadPayments(); // Reload
                     } else {
                         const err = await response.json();
