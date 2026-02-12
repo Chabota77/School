@@ -24,73 +24,135 @@ app.use(express.static(path.join(__dirname, '/')));
 
 // Initialize Database
 const dbPath = path.join(__dirname, 'school.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Error connecting to database:', err.message);
-    else {
-        console.log('Connected to SQLite database.');
-        // Seed Classes if empty
-        db.get("SELECT COUNT(*) as count FROM classes", (err, row) => {
-            if (!err && row.count === 0) {
-                console.log("Seeding classes...");
-                const stmt = db.prepare("INSERT INTO classes (name) VALUES (?)");
-                stmt.run("Grade 7A");
-                stmt.run("Grade 7B");
-                stmt.run("Grade 8A");
-                stmt.run("Grade 9B");
-                stmt.finalize();
+let db;
+
+if (process.env.DATABASE_URL) {
+    // PostgreSQL Connection
+    const { Pool } = require('pg');
+    const pool = new Pool({
+        connectionString: process.env.DATABASE_URL,
+        ssl: { rejectUnauthorized: false } // Required for Render
+    });
+
+    console.log('Connected to PostgreSQL database.');
+
+    // Helper to mimic MySQL style for Postgres
+    db = {
+        query: (sql, params, callback) => {
+            if (typeof params === 'function') {
+                callback = params;
+                params = [];
             }
-        });
-    }
-});
+            // Convert ? placeholders to $1, $2, etc.
+            let paramCount = 1;
+            const pgSql = sql.replace(/\?/g, () => `$${paramCount++}`);
 
-// Helper to mimic mysql db.query style
-// This allows us to keep most of the code logic same
-db.query = function (sql, params, callback) {
-    if (typeof params === 'function') {
-        callback = params;
-        params = [];
-    }
+            // Handle strftime for monthly stats -> Postgres to_char
+            // This is a specific hack for the monthly stats query
+            const finalSql = pgSql
+                .replace("strftime('%m', date)", "TO_CHAR(date, 'MM')")
+                .replace("strftime('%Y', date)", "TO_CHAR(date, 'YYYY')");
 
-    const lowerSql = sql.trim().toLowerCase();
-    if (lowerSql.startsWith('select') || lowerSql.startsWith('show')) {
-        db.all(sql, params, (err, rows) => {
-            if (callback) callback(err, rows);
-        });
-    } else {
-        db.run(sql, params, function (err) {
-            if (callback) {
-                // Mimic MySQL result object
-                // this.lastID is equivalent to insertId
-                // this.changes is equivalent to affectedRows
-                const result = {
-                    insertId: this.lastID,
-                    affectedRows: this.changes
+            // Auto-append RETURNING id for INSERTs
+            let executableSql = finalSql;
+            if (finalSql.trim().toUpperCase().startsWith('INSERT') && !finalSql.toUpperCase().includes('RETURNING')) {
+                executableSql += ' RETURNING id';
+            }
+
+            pool.query(executableSql, params, (err, res) => {
+                if (err) {
+                    if (callback) callback(err, null);
+                    return;
+                }
+
+                // Format result to match what app expects
+                // SELECT queries return rows in res.rows
+                // INSERT/UPDATE return rowCount
+                const results = res.command === 'SELECT' ? res.rows : {
+                    insertId: res.rows[0]?.id || 0,
+                    affectedRows: res.rowCount
                 };
-                callback(err, result);
-            }
+
+                if (callback) callback(null, results);
+            });
+        },
+        beginTransaction: (cb) => pool.query('BEGIN', cb),
+        commit: (cb) => pool.query('COMMIT', cb),
+        rollback: (cb) => pool.query('ROLLBACK', cb)
+    };
+
+    // Auto-migrate Schema for Postgres
+    const fs = require('fs');
+    const schemaSql = fs.readFileSync(path.join(__dirname, 'postgres-schema.sql'), 'utf8');
+    pool.query(schemaSql, (err) => {
+        if (err) console.error("Schema Migration Error:", err);
+        else console.log("PostgreSQL Schema synced.");
+    });
+
+} else {
+    // SQLite Connection (Local Fallback)
+    db = new sqlite3.Database(dbPath, (err) => {
+        if (err) console.error('Error connecting to database:', err.message);
+        else {
+            console.log('Connected to SQLite database.');
+            // Seed Classes if empty
+            db.get("SELECT COUNT(*) as count FROM classes", (err, row) => {
+                if (!err && row.count === 0) {
+                    console.log("Seeding classes...");
+                    const stmt = db.prepare("INSERT INTO classes (name) VALUES (?)");
+                    stmt.run("Grade 7A");
+                    stmt.run("Grade 7B");
+                    stmt.run("Grade 8A");
+                    stmt.run("Grade 9B");
+                    stmt.finalize();
+                }
+            });
+        }
+    });
+
+    // Helper to mimic mysql db.query style
+    db.query = function (sql, params, callback) {
+        if (typeof params === 'function') {
+            callback = params;
+            params = [];
+        }
+
+        const lowerSql = sql.trim().toLowerCase();
+        if (lowerSql.startsWith('select') || lowerSql.startsWith('show')) {
+            db.all(sql, params, (err, rows) => {
+                if (callback) callback(err, rows);
+            });
+        } else {
+            db.run(sql, params, function (err) {
+                if (callback) {
+                    const result = {
+                        insertId: this.lastID,
+                        affectedRows: this.changes
+                    };
+                    callback(err, result);
+                }
+            });
+        }
+    };
+
+    db.beginTransaction = function (callback) {
+        db.run('BEGIN TRANSACTION', (err) => {
+            if (callback) callback(err);
         });
-    }
-};
+    };
 
-// Also we need to mimic db.beginTransaction etc.
-// SQLite transactions are serialized, but we can wrap them.
-db.beginTransaction = function (callback) {
-    db.run('BEGIN TRANSACTION', (err) => {
-        if (callback) callback(err);
-    });
-};
+    db.commit = function (callback) {
+        db.run('COMMIT', (err) => {
+            if (callback) callback(err);
+        });
+    };
 
-db.commit = function (callback) {
-    db.run('COMMIT', (err) => {
-        if (callback) callback(err);
-    });
-};
-
-db.rollback = function (callback) {
-    db.run('ROLLBACK', (err) => {
-        if (callback) callback(err);
-    });
-};
+    db.rollback = function (callback) {
+        db.run('ROLLBACK', (err) => {
+            if (callback) callback(err);
+        });
+    };
+}
 
 
 // Middleware for authentication
