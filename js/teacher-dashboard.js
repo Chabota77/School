@@ -1,16 +1,36 @@
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     const { SchoolData } = window;
     const user = JSON.parse(localStorage.getItem('currentUser'));
 
+    // Verify User Role
     if (!user || user.role !== 'teacher') {
         window.location.href = '../login.html';
         return;
     }
 
-    // Find the Teacher Profile linked to this User
+    const token = localStorage.getItem('token');
+
+    // FETCH REAL TEACHER PROFILE
+    let teacherProfile = null;
+
+    try {
+        const res = await fetch(`/api/teachers/${user.id}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!res.ok) throw new Error('Failed to fetch profile');
+        teacherProfile = await res.json();
+    } catch (err) {
+        console.error(err);
+        alert('Could not load teacher profile. Please relogin.');
+        // window.location.href = '../login.html';
+        return;
+    }
+
+    /* 
     const teachers = SchoolData.getCollection('teachers');
-    const teacherProfile = teachers.find(t => t.userId === user.id) || teachers.find(t => t.email === user.username);
-    // ^ Fallback if userId not set but username matches email, just for safety in mock data
+    const teacherProfile = teachers.find(t => t.userId === user.id) || teachers.find(t => t.email === user.username); 
+    */
 
     if (!teacherProfile) {
         alert('Teacher profile not found for this user.');
@@ -19,22 +39,44 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Set Welcome Name
     const headerName = document.querySelector('.teacher-header h1');
-    if (headerName) headerName.textContent = `Welcome, ${teacherProfile.name}`;
+    if (headerName) {
+        // Use profile name OR fallback to user.name from auth
+        headerName.textContent = `Welcome, ${teacherProfile.name || user.name}`;
+    }
 
-    // Get Classes
-    const myClassIds = teacherProfile.classIds || [];
-    const myClasses = SchoolData.getClasses().filter(c => myClassIds.includes(c.id));
+    // Load Data from API
+    let myClasses = [];
+    let myStudents = [];
 
-    // Get Students
-    const allStudents = SchoolData.getCollection('students');
-    const myStudents = allStudents.filter(s => myClassIds.includes(s.classId));
+    // Fetch Classes and Students
+    try {
+        const [classesRes, studentsRes] = await Promise.all([
+            fetch('/api/classes', { headers: { 'Authorization': `Bearer ${token}` } }),
+            fetch('/api/students', { headers: { 'Authorization': `Bearer ${token}` } })
+        ]);
+
+        if (classesRes.ok) {
+            const allClasses = await classesRes.json();
+            // Filter classes assigned to this teacher
+            myClasses = allClasses.filter(c => teacherProfile.classIds.includes(c.id));
+        }
+
+        if (studentsRes.ok) {
+            const allStudents = await studentsRes.json();
+            // Filter students in my classes
+            myStudents = allStudents.filter(s => teacherProfile.classIds.includes(s.class_id));
+        }
+
+    } catch (e) {
+        console.error('Error loading dashboard data:', e);
+    }
 
     // Load Stats
     const loadStats = () => {
         const cards = document.querySelectorAll('.stats-cards .card p');
         if (cards.length >= 3) {
             cards[0].textContent = myStudents.length;
-            cards[1].textContent = '0'; // Assignments Pending (Mock)
+            cards[1].textContent = teacherProfile.classIds.length; // Classes count
             cards[2].textContent = '0'; // New Messages (Mock)
         }
     };
@@ -45,53 +87,63 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tbody) return;
 
         if (myStudents.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4">No pupils assigned to your classes.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="4" style="padding:20px; text-align:center;">No pupils assigned to your classes.</td></tr>';
             return;
         }
 
         tbody.innerHTML = myStudents.map(s => {
-            const cls = myClasses.find(c => c.id === s.classId);
+            const cls = myClasses.find(c => c.id === s.class_id);
             return `
             <tr>
                 <td>${s.id}</td>
                 <td>${s.name}</td>
                 <td>${s.gender || 'N/A'}</td>
-                <td>${cls ? cls.name : s.classId}</td>
+                <td>${cls ? cls.name : (s.class_name || s.class_id)}</td>
             </tr>
             `;
         }).join('');
     };
 
     // Load Announcements
-    const loadAnnouncements = () => {
+    const loadAnnouncements = async () => {
         const announcementSection = document.getElementById('announcements');
         const listDiv = announcementSection.querySelector('.announcement-list');
         if (!listDiv) return;
 
-        const allAnnouncements = SchoolData.getCollection('announcements');
+        try {
+            const res = await fetch('/api/announcements', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-        // Filter: Everyone OR Teachers only
-        const myAnnouncements = allAnnouncements.filter(a =>
-            a.audience === 'Everyone' || a.audience === 'Teachers only'
-        );
+            if (res.ok) {
+                const allAnnouncements = await res.json();
+                // Filter: Everyone OR Teachers only
+                const myAnnouncements = allAnnouncements.filter(a =>
+                    a.audience === 'Everyone' || a.audience === 'Teachers' || a.audience === 'Teachers only'
+                );
 
-        if (myAnnouncements.length === 0) {
-            listDiv.innerHTML = '<p>No new announcements.</p>';
-            return;
+                if (myAnnouncements.length === 0) {
+                    listDiv.innerHTML = '<p>No new announcements.</p>';
+                    return;
+                }
+
+                listDiv.innerHTML = myAnnouncements.map(a => `
+                    <div class="announcement-card" style="background:white; padding:15px; margin-bottom:15px; border-radius:8px; border-left: 4px solid #2b6cb0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <h4 style="margin:0; font-size:1.1em; color:#2d3748;">${a.title}</h4>
+                            <span style="font-size:0.85em; color:#718096;">${new Date(a.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p style="color:#4a5568; line-height:1.5;">${a.content}</p>
+                        <div style="margin-top:10px; font-size:0.8em; color:#718096; font-weight:600;">
+                            Audience: ${a.audience}
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (e) {
+            console.error('Error loading announcements:', e);
+            listDiv.innerHTML = '<p>Error loading announcements.</p>';
         }
-
-        listDiv.innerHTML = myAnnouncements.map(a => `
-            <div class="announcement-card" style="background:white; padding:15px; margin-bottom:15px; border-radius:8px; border-left: 4px solid #2b6cb0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <h4 style="margin:0; font-size:1.1em; color:#2d3748;">${a.title}</h4>
-                    <span style="font-size:0.85em; color:#718096;">${a.date}</span>
-                </div>
-                <p style="color:#4a5568; line-height:1.5;">${a.content}</p>
-                <div style="margin-top:10px; font-size:0.8em; color:#718096; font-weight:600;">
-                    Audience: ${a.audience}
-                </div>
-            </div>
-        `).join('');
     };
 
     // Navigation Logic

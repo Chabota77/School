@@ -141,9 +141,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
-    const loadAdmissions = () => {
-        allAdmissions = SchoolData.getCollection('admissions');
-        renderAdmissions(allAdmissions);
+    const loadAdmissions = async () => {
+        try {
+            const res = await fetch('/api/admissions');
+            if (res.ok) {
+                allAdmissions = await res.json();
+                renderAdmissions(allAdmissions);
+            }
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     const renderAdmissions = (data) => {
@@ -235,7 +242,17 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteTeacher = async (id) => {
         if (confirm('Delete this teacher? This will also remove their access.')) {
             try {
-                const res = await fetch(`/api/teachers/${id}`, { method: 'DELETE' });
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Session expired. Please login again.');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
+                const res = await fetch(`/api/teachers/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
                 if (res.ok) {
                     alert('Teacher deleted');
                     loadTeachers();
@@ -312,105 +329,38 @@ document.addEventListener('DOMContentLoaded', () => {
         window.open(url, '_blank');
     };
 
-    window.updateAdmission = (id, status) => {
-        // Find admission
-        const admissions = SchoolData.getCollection('admissions');
-        const adm = admissions.find(a => a.id == id);
-        if (adm) {
-            // FIX: Use correctly persisted update
-            if (adm.status !== 'Pending' && status === 'Approved') {
-                // allow re-download if approved?
-                if (adm.status === 'Approved') {
-                    downloadAdmissionLetter(id);
-                    return;
-                }
-            }
+    window.updateAdmission = async (id, status) => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`/api/admissions/${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
 
-            SchoolData.updateItem('admissions', id, { status: status });
-            // adm.status = status; 
-            // SchoolData.saveDB(SchoolData.getDB()); // persist - using updateItem is safer as per previous fix
+            if (res.ok) {
+                // If Approved, the server already handles Student/User creation!
+                // We just need to reload UI.
 
-            // loadAdmissions(); // Don't reload entire table, update UI locally
-            loadStats();
-
-            // UI UPDATE: Replace buttons with Status AND Button
-            const btnFn = document.querySelector(`button[onclick*="updateAdmission('${id}', 'Approved')"]`);
-            if (btnFn) {
-                const td = btnFn.parentElement;
                 if (status === 'Approved') {
-                    td.innerHTML = `
-                        <span style="font-weight:bold; color:green; display:block; margin-bottom:5px;">Approved</span>
-                        <button class="btn secondary" onclick="downloadAdmissionLetter('${id}')" style="font-size:0.8em; padding:5px 10px; background-color: #2b6cb0; color: white; border: none;">Download Letter</button>
-                    `;
+                    downloadAdmissionLetter(id);
+                    if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
                 } else {
-                    td.innerHTML = `<span style="font-weight:bold; color:red;">Rejected</span>`;
+                    alert(`Admission ${status}`);
                 }
+
+                loadAdmissions();
+                loadStats();
+            } else {
+                const err = await res.json();
+                alert('Error: ' + err.error);
             }
-
-            // If approved, create Student AND User Account
-            if (status === 'Approved') {
-                // 1. Resolve Class ID (Simplified Mapping)
-                const classes = SchoolData.getClasses();
-                const cls = classes.find(c => c.name === adm.class_name) || classes[0];
-
-                // 2. Create User (Local - kept for compatibility)
-                const newUser = {
-                    username: adm.student_name.toLowerCase().replace(/\s+/g, ''),
-                    password: 'password', // Default
-                    role: 'student',
-                    name: adm.student_name
-                };
-                const createdUser = SchoolData.addItem('users', newUser);
-
-                // 3. Create Student linked to User (Local)
-                SchoolData.addStudent({
-                    userId: createdUser.id, // LINKED
-                    name: adm.student_name,
-                    classId: cls.id,
-                    status: 'Enrolled',
-                    guardian: adm.parent_name,
-                    phone: adm.phone,
-                    email: adm.email
-                });
-
-                // 4. SYNC TO BACKEND (Fix for Stats/Payments)
-                // We send this to the API so it appears in SQLite-based views (Payments, Stats)
-                // FIRST: Fetch classes from backend to get the real Integer ID, not the string ID
-                fetch('/api/classes')
-                    .then(res => res.json())
-                    .then(backendClasses => {
-                        const backendClass = backendClasses.find(c => c.name === adm.class_name);
-                        const realClassId = backendClass ? backendClass.id : null;
-
-                        const apiPayload = {
-                            name: adm.student_name,
-                            age: adm.age || 0, // Fallback
-                            gender: adm.gender || 'Not Specified',
-                            class_id: realClassId || cls.id, // Prefer backend ID, fallback to local (though local is likely string)
-                            status: 'Enrolled'
-                        };
-
-                        return fetch('/api/students', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${localStorage.getItem('token')}`
-                            },
-                            body: JSON.stringify(apiPayload)
-                        });
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        console.log('Student synced to backend:', data);
-                        loadStats(); // Reload stats after backend sync
-                    })
-                    .catch(err => console.error('Failed to sync student to backend:', err));
-
-                // 5. Auto-Download Letter
-                downloadAdmissionLetter(id);
-
-                if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
-            }
+        } catch (e) {
+            console.error(e);
+            alert('Network error updating admission');
         }
     };
 
@@ -468,9 +418,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     method = 'PUT';
                 }
 
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    alert('Session expired. Please login again.');
+                    window.location.href = '../login.html';
+                    return;
+                }
+
                 const res = await fetch(url, {
                     method: method,
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
                     body: JSON.stringify(payload)
                 });
 

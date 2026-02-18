@@ -15,11 +15,11 @@
 
       <!-- Left Panel -->
       <div class="profile-left">
-        <div class="avatar-circle">JB</div>
-        <h2>Mr. John Banda</h2>
-        <p><strong>Email:</strong> john.banda@school.com</p>
-        <p><strong>Phone:</strong> +260 97 123 4567</p>
-        <p><strong>Status:</strong> Active</p>
+        <div class="avatar-circle" id="profile-avatar">T</div>
+        <h2 id="profile-name">Teacher Name</h2>
+        <p><strong>Email:</strong> <span id="profile-email">...</span></p>
+        <p><strong>Phone:</strong> <span id="profile-phone">...</span></p>
+        <p><strong>Status:</strong> <span id="profile-status">...</span></p>
       </div>
 
       <!-- Right Panel -->
@@ -31,9 +31,8 @@
 
         <div class="classes-panel">
           <h3>Classes & Subjects</h3>
-          <ul>
-            <li>Grade 7A — Mathematics</li>
-            <li>Grade 7B — Mathematics</li>
+          <ul id="profile-classes">
+            <li>Loading...</li>
           </ul>
         </div>
       </div>
@@ -41,6 +40,12 @@
     </div>
 
   </main>
+
+  <script src="../js/data.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/app.js"></script>
+  <script src="../js/teacher-profile.js"></script>
 </body>
 
 </html>

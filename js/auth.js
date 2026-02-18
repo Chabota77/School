@@ -6,7 +6,7 @@
 window.SchoolAuth = {
     login: async (username, password, role) => {
         try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password, role })
@@ -17,6 +17,7 @@ window.SchoolAuth = {
             if (response.ok) {
                 // Strict Role Check - User requested specific role login
                 const targetRole = data.user.role;
+
                 if (role && role !== targetRole) {
                     window.SchoolUtils.showToast(`Login failed: You are a ${targetRole}, not a ${role}`, 'error');
                     return false;
@@ -28,14 +29,21 @@ window.SchoolAuth = {
                 localStorage.setItem('token', data.token);
                 localStorage.setItem('currentUser', JSON.stringify(data.user));
 
-                setTimeout(() => {
-                    if (targetRole === 'admin') window.location.href = 'admin/dashboard.html';
-                    else if (targetRole === 'teacher') window.location.href = 'teacher/dashboard.html';
-                    else if (targetRole === 'student') window.location.href = 'student/dashboard.html';
-                    else if (targetRole === 'accountant') window.location.href = 'accountant-dashboard.html';
-                    else if (targetRole === 'info_officer') window.location.href = 'info-dashboard.html';
-                    else window.location.href = 'index.html';
-                }, 1000);
+                // Prioritize requested role if allowed (for sub-admins)
+                if (targetRole === 'admin' && role === 'admin') {
+                    window.location.href = '/admin/dashboard.html';
+                } else if (targetRole === 'teacher') {
+                    window.location.href = '/teacher/dashboard.html';
+                } else if (targetRole === 'student') {
+                    window.location.href = '/student/dashboard.html';
+                } else if (targetRole === 'accountant') {
+                    window.location.href = '/accountant-dashboard.html';
+                } else if (targetRole === 'info_officer') {
+                    window.location.href = '/info-dashboard.html';
+                } else {
+                    window.location.href = '/index.html';
+                }
+
                 return true;
             } else {
                 window.SchoolUtils.showToast(data.message || 'Login failed', 'error');
@@ -79,6 +87,7 @@ window.SchoolAuth = {
     requireAuth: (requiredRole) => {
         const user = JSON.parse(localStorage.getItem('currentUser'));
         if (!user || (requiredRole && user.role !== requiredRole)) {
+            console.log(`Access Denied: User is ${user?.role}, Page requires ${requiredRole}`);
             window.SchoolAuth.logout();
             return null;
         }

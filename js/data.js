@@ -30,38 +30,16 @@ const DEFAULT_DATA = {
     // entities
     users: [
         { id: 'U1', username: 'admin', password: 'password', role: 'admin', name: 'Admin User' },
-        { id: 'U2', username: 'teacher', password: 'password', role: 'teacher', name: 'Teacher User', relatedId: 'T001' },
-        { id: 'U3', username: 'student', password: 'password', role: 'student', name: 'Student User', relatedId: '2600001' },
         { id: 'U4', username: 'accountant', password: 'password', role: 'accountant', name: 'Accountant User' },
         { id: 'U5', username: 'info', password: 'password', role: 'info_officer', name: 'Info Officer' }
     ],
 
-    teachers: [
-        { id: 'T001', userId: 'U2', name: 'Mr. John Banda', subjectIds: ['MATH'], classIds: ['C7A'], status: 'Active', email: 'john.banda@school.com', phone: '+260977123456' },
-        { id: 'T002', userId: null, name: 'Ms. Ruth Mwila', subjectIds: ['ENG'], classIds: ['C9B'], status: 'On Leave', email: 'ruth.mwila@school.com', phone: '+260966654321' },
-        { id: 'T003', userId: null, name: 'Mrs. Grace Phiri', subjectIds: ['SCI'], classIds: ['C8A'], status: 'Active', email: 'grace.phiri@school.com', phone: '+260955987654' }
-    ],
-    students: [
-        { id: '2600001', userId: 'U3', name: 'John Doe', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Doe', phone: '0977000000', rollNo: '2600001' },
-        { id: '2600002', userId: null, name: 'Jane Smith', classId: 'C7A', status: 'Enrolled', guardian: 'Mrs. Smith', phone: '0977000001', rollNo: '2600002' },
-        { id: '2600003', userId: null, name: 'Michael Banda', classId: 'C7A', status: 'Enrolled', guardian: 'Mr. Banda', phone: '0977000002', rollNo: '2600003' }
-    ],
+    teachers: [], // Empty (User will add)
+    students: [], // Empty (User will add)
 
     // relationships
-    enrollments: [
-        // Mapping students to classes/years (Implicit in students.classId for current year, but distinct for history)
-        // For now, students.classId is the main source of truth for "Current Enrollment"
-    ],
-    results: [
-        // Normalized Results: Student + Subject + Term = Score
-        { id: 'R1', studentId: '2600001', subjectId: 'MATH', termId: 'T1', score: 85, yearId: '2026' },
-        { id: 'R2', studentId: '2600001', subjectId: 'ENG', termId: 'T1', score: 78, yearId: '2026' },
-        { id: 'R3', studentId: '2600001', subjectId: 'SCI', termId: 'T1', score: 92, yearId: '2026' },
-        { id: 'R4', studentId: '2600001', subjectId: 'SOC', termId: 'T1', score: 88, yearId: '2026' },
-
-        { id: 'R5', studentId: '2600002', subjectId: 'MATH', termId: 'T1', score: 90, yearId: '2026' },
-        { id: 'R6', studentId: '2600002', subjectId: 'ENG', termId: 'T1', score: 85, yearId: '2026' },
-    ],
+    enrollments: [],
+    results: [],
 
     announcements: [
         { id: 1, title: 'School Reopens', content: 'School reopens on 10th January for all learners.', date: '2026-01-05', audience: 'Everyone' },
@@ -89,25 +67,19 @@ function initData() {
         console.log('Database initialized with normalized data.');
     } else {
         const storedVersion = localStorage.getItem('bf_data_version');
-        const CURRENT_VERSION = '1.2';
+        const CURRENT_VERSION = '1.3';
 
         // Force update if version mismatch (or missing)
         if (storedVersion !== CURRENT_VERSION) {
-            console.log('Data version mismatch. Merging new default users...');
-            const db = JSON.parse(stored);
+            console.log('Data version mismatch. Performing HARD RESET to current defaults...');
 
-            // Merge Users (Ensure Accountant/Info exist)
-            const newUsers = DEFAULT_DATA.users;
-            newUsers.forEach(nu => {
-                if (!db.users.find(u => u.username === nu.username)) {
-                    db.users.push(nu);
-                }
-            });
+            // Force replace with DEFAULT_DATA for v1.3 cleanup
+            const db = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
             // Update version
             localStorage.setItem('bf_data_version', CURRENT_VERSION);
             localStorage.setItem('bf_school_data', JSON.stringify(db));
-            console.log('Data migration complete.');
+            console.log('Data reset complete.');
             window.location.reload();
             return;
         }

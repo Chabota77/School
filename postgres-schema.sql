@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS students (
     gender VARCHAR(50),
     class_id INTEGER,
     status VARCHAR(50) DEFAULT 'Enrolled',
+    password VARCHAR(255) DEFAULT '$2b$10$98MznwcuzPKhZCSSut7EWe6/dVL2RyCgFgusKsqMWYHgh/q2co9YW', -- default: student123
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (class_id) REFERENCES classes(id) ON DELETE SET NULL
 );
@@ -133,19 +134,34 @@ INSERT INTO subjects (name) VALUES ('Science') ON CONFLICT DO NOTHING;
 INSERT INTO subjects (name) VALUES ('Social Studies') ON CONFLICT DO NOTHING;
 
 -- Admin (password: admin123 hashed)
-INSERT INTO admins (username, password, email) VALUES (
     'admin',
-    '$2b$10$YourHashedPasswordHere', 
+    '$2b$10$1Cjxd/hYi0C1at6HQkFCP.TO8nENMJF6Rh21VSmRel41Wa7mrfI2O', 
     'admin@school.com'
 ) ON CONFLICT DO NOTHING;
 
--- Teachers
-INSERT INTO teachers (name, email, phone, status) VALUES (
-    'Mr. John Banda', 'john.banda@school.com', '+260123456789', 'Active'
+-- Accountant (password: password)
+INSERT INTO admins (username, password, email) VALUES (
+    'account',
+    '$2b$10$1Cjxd/hYi0C1at6HQkFCP.TO8nENMJF6Rh21VSmRel41Wa7mrfI2O', 
+    'account@school.com'
 ) ON CONFLICT DO NOTHING;
 
-INSERT INTO teachers (name, email, phone, status) VALUES (
-    'Ms. Ruth Mwila', 'ruth.mwila@school.com', '+260987654321', 'On Leave'
+-- Information Officer (password: password)
+INSERT INTO admins (username, password, email) VALUES (
+    'info',
+    '$2b$10$1Cjxd/hYi0C1at6HQkFCP.TO8nENMJF6Rh21VSmRel41Wa7mrfI2O', 
+    'info@school.com'
+) ON CONFLICT DO NOTHING;
+
+-- Teachers
+INSERT INTO teachers (name, email, phone, status, password) VALUES (
+    'Mr. John Banda', 'john.banda@school.com', '+260123456789', 'Active',
+    '$2b$10$NEmd5A13ZoHXS6EzyBV/fe1r.AZlCamKyqawSO.ke1.8ey9FNx7GW'
+) ON CONFLICT DO NOTHING;
+
+INSERT INTO teachers (name, email, phone, status, password) VALUES (
+    'Ms. Ruth Mwila', 'ruth.mwila@school.com', '+260987654321', 'On Leave',
+    '$2b$10$NEmd5A13ZoHXS6EzyBV/fe1r.AZlCamKyqawSO.ke1.8ey9FNx7GW'
 ) ON CONFLICT DO NOTHING;
 
 -- Teacher Assignments

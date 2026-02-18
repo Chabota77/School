@@ -32,42 +32,64 @@ document.addEventListener('DOMContentLoaded', () => {
     let allStudentsPayments = []; // Store combined data
 
     // Load Payments Summary
-    const loadPayments = () => {
-        const students = SchoolData.getCollection('students');
-        const payments = SchoolData.getCollection('payments');
-        const classes = SchoolData.getClasses();
+    const loadPayments = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const headers = { 'Authorization': `Bearer ${token}` };
 
-        // Calculate Student Balances
-        // Assuming Logic: Total Fees = 5000 (Example Fixed). Real logic would depend on class level.
-        const FEES = 5000;
+            const [studentsRes, paymentsRes] = await Promise.all([
+                fetch('/api/students', { headers }),
+                fetch('/api/payments', { headers })
+            ]);
 
-        allStudentsPayments = students.map(s => {
-            const studentPayments = payments.filter(p => p.studentId === s.id);
-            const paid = studentPayments.reduce((acc, curr) => acc + Number(curr.amount), 0);
-            const balance = FEES - paid;
+            if (!studentsRes.ok || !paymentsRes.ok) throw new Error('Failed to fetch data');
 
-            // Determine Status
-            let status = 'Unpaid';
-            if (paid >= FEES) status = 'Paid';
-            else if (paid > 0) status = 'Partial';
+            const students = await studentsRes.json();
+            const payments = await paymentsRes.json();
+            const classes = SchoolData.getClasses(); // Keep classes local for now or fetch if available
 
-            const cls = classes.find(c => c.id === s.classId);
+            // Calculate Student Balances
+            const FEES = 5000;
 
-            return {
-                id: s.id,
-                name: s.name,
-                class_name: cls ? cls.name : 'Unknown',
-                total_fees: FEES,
-                paid: paid,
-                balance: balance,
-                status: status
-            };
-        });
+            allStudentsPayments = students.map(s => {
+                // API returns snake_case for students (s.id is consistent)
+                // Payments API returns snake_case (student_id)
+                const studentPayments = payments.filter(p => p.student_id === s.id);
+                const paid = studentPayments.reduce((acc, curr) => acc + Number(curr.amount), 0);
+                const balance = FEES - paid;
 
-        populateClassFilter(allStudentsPayments);
-        filterAndRender();
-        updateDashboardStats(allStudentsPayments);
-        updateMonthlyStats();
+                // Determine Status
+                let status = 'Unpaid';
+                if (paid >= FEES) status = 'Paid';
+                else if (paid > 0) status = 'Partial';
+
+                const cls = classes.find(c => c.id == s.class_id) || { name: s.class_name || 'Unknown' };
+
+                return {
+                    id: s.id,
+                    name: s.name, // users.name joined
+                    class_name: cls.name,
+                    total_fees: FEES,
+                    paid: paid,
+                    balance: balance,
+                    status: status
+                };
+            });
+
+            populateClassFilter(allStudentsPayments);
+            filterAndRender();
+            updateDashboardStats(allStudentsPayments);
+            // updateMonthlyStats(payments); // Pass payments explicitly if needed or use global
+            // For now, let's just re-implement monthly stats logic inside or pass data
+            // But updateMonthlyStats relies on SchoolData or we need to pass 'payments' to it.
+            // Let's refactor updateMonthlyStats to accept data.
+            window.currentPaymentsData = payments; // Store for other functions
+            updateMonthlyStats();
+
+        } catch (err) {
+            console.error(err);
+            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color:red;">Error loading payments data.</td></tr>';
+        }
     };
 
     const updateDashboardStats = (data) => {
@@ -135,7 +157,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const monthIndex = monthSelect.selectedIndex; // 0 = Jan
         const year = parseInt(yearSpan.innerText);
 
-        const payments = SchoolData.getCollection('payments');
+        // Use global variable set in loadPayments
+        const payments = window.currentPaymentsData || [];
 
         const monthlyTotal = payments.filter(p => {
             const d = new Date(p.date);
@@ -152,25 +175,51 @@ document.addEventListener('DOMContentLoaded', () => {
         addPaymentModal.style.display = 'flex';
     };
 
-    paymentForm.addEventListener('submit', (e) => {
+    paymentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const studentId = document.getElementById('payStudentId').value;
         const amount = document.getElementById('payAmount').value;
         const date = document.getElementById('payDate').value;
         const method = document.getElementById('payMethod').value;
+        const btn = paymentForm.querySelector('button[type="submit"]');
 
-        SchoolData.addItem('payments', {
-            studentId,
-            amount,
-            date,
-            method,
-            year: 2026 // Default
-        });
+        btn.textContent = 'Processing...';
+        btn.disabled = true;
 
-        alert('Payment recorded successfully!');
-        addPaymentModal.style.display = 'none';
-        paymentForm.reset();
-        loadPayments();
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/payments', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    studentId,
+                    amount,
+                    date,
+                    method,
+                    year: new Date().getFullYear(),
+                    term: 'Term 1'
+                })
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.error || 'Payment failed');
+            }
+
+            alert('Payment recorded successfully!');
+            addPaymentModal.style.display = 'none';
+            paymentForm.reset();
+            loadPayments(); // Reload data
+        } catch (err) {
+            console.error(err);
+            alert('Error: ' + err.message);
+        } finally {
+            btn.textContent = 'Save Payment';
+            btn.disabled = false;
+        }
     });
 
     // View History Logic
@@ -179,7 +228,8 @@ document.addEventListener('DOMContentLoaded', () => {
         historyModal.style.display = 'flex';
         historyTableBody.innerHTML = '<tr><td colspan="5">Loading...</td></tr>';
 
-        const payments = SchoolData.getCollection('payments').filter(p => p.studentId === studentId);
+        // Use global API data
+        const payments = (window.currentPaymentsData || []).filter(p => p.student_id == studentId);
 
         if (payments.length === 0) {
             historyTableBody.innerHTML = '<tr><td colspan="5">No payment history found.</td></tr>';

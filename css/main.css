@@ -260,31 +260,70 @@ textarea:focus {
 @media (max-width: 768px) {
   .menu-icon {
     display: block;
+    color: var(--white);
+    font-size: 1.8rem;
+    z-index: 1001; /* Above hero content */
   }
 
   .nav-links {
     position: fixed;
     top: 0;
     right: -100%;
-    width: 70%;
+    width: 280px; /* Specific width */
     height: 100vh;
-    background: var(--primary);
+    background: var(--primary); /* Solid Navy Blue */
     flex-direction: column;
-    padding: 80px 30px;
-    gap: 30px;
-    transition: 0.3s ease;
+    padding: 60px 30px;
+    gap: 25px;
+    transition: right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Smooth ease */
+    z-index: 2000;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
   }
 
   #menu-toggle:checked~.nav-links {
     right: 0;
   }
 
-  .logo {
-    font-size: 20px;
+  /* Close Button Styling */
+  .close-btn {
+    position: absolute;
+    top: 20px;
+    right: 25px;
+    font-size: 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: color 0.3s;
+    display: block; /* Ensure visibility */
   }
 
+  .close-btn:hover {
+    color: var(--accent);
+  }
+
+  /* Mobile Links Styling */
+  .nav-links a {
+    font-size: 1.1rem;
+    margin-left: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+    display: block;
+    width: 100%;
+  }
+
+  .nav-links a:last-child {
+    border-bottom: none;
+    margin-top: 10px;
+  }
+
+  .nav-links .btn {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Adjust Hero Text */
   .hero-content h1 {
-    font-size: 32px;
+    font-size: 2.5rem;
   }
 }
 

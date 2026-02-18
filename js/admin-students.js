@@ -18,29 +18,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const { SchoolData } = window;
     let allStudentsData = []; // Store for filtering
 
-    // Load classes
-    const classes = SchoolData.getClasses();
-    const options = classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    studentClassSelect.innerHTML = '<option value="">Select class</option>' + options;
-    const filterClass = document.getElementById('filter-class');
-    if (filterClass) {
-        filterClass.innerHTML = '<option value="">All Classes</option>' +
-            classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-    }
+    // Load classes from API
+    const loadClasses = async () => {
+        try {
+            // Fetch from API to get real Integer IDs
+            const res = await fetch('/api/classes');
+            if (res.ok) {
+                const classes = await res.json();
+
+                // Populate Add Student Modal
+                const options = classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+                studentClassSelect.innerHTML = '<option value="">Select class</option>' + options;
+
+                // Populate Filter
+                const filterClass = document.getElementById('filter-class');
+                if (filterClass) {
+                    filterClass.innerHTML = '<option value="">All Classes</option>' +
+                        classes.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+                }
+
+                return classes;
+            }
+        } catch (e) {
+            console.error('Failed to load classes', e);
+        }
+    };
+
+    loadClasses();
 
     // Load students
-    const loadStudents = () => {
-        const students = SchoolData.getCollection('students');
-        // Join with class names
-        allStudentsData = students.map(s => {
-            const cls = classes.find(c => c.id === s.classId);
-            return {
-                ...s,
-                class_name: cls ? cls.name : 'Unknown',
-                class_id: s.classId // ensure consistency
-            };
-        });
-        renderTable(allStudentsData);
+    const loadStudents = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch('/api/students', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to load students');
+
+            const students = await res.json();
+
+            // Map API data to UI structure
+            allStudentsData = students.map(s => ({
+                id: s.id,
+                rollNo: s.roll_number || s.id,
+                name: s.name, // joined from users
+                age: s.age,
+                gender: s.gender,
+                status: s.status,
+                classId: s.class_id,
+                class_name: s.class_name // joined from classes
+            }));
+
+            renderTable(allStudentsData);
+        } catch (err) {
+            console.error(err);
+            studentsList.innerHTML = '<tr><td colspan="7">Error loading students from database.</td></tr>';
+        }
     };
 
     const renderTable = (data) => {
@@ -104,31 +137,68 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    studentForm.addEventListener('submit', (e) => {
+    studentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('student-id').value;
+        const btn = studentForm.querySelector('button[type="submit"]');
 
         const studentData = {
             name: document.getElementById('student-name').value,
             age: document.getElementById('student-age').value,
             gender: document.getElementById('student-gender').value,
-            classId: document.getElementById('student-class').value,
+            class_id: document.getElementById('student-class').value,
             status: document.getElementById('student-status').value,
-            rollNo: id ? undefined : Math.floor(Math.random() * 1000) // Mock roll no gen
+            password: document.getElementById('student-password').value // Capture password
         };
 
-        if (id) {
-            SchoolData.updateItem('students', id, studentData);
-        } else {
-            // Use new Auto-Number logic
-            SchoolData.addStudent(studentData);
-        }
+        btn.textContent = 'Saving...';
+        btn.disabled = true;
 
-        modalToggle.checked = false;
-        studentForm.reset();
-        document.getElementById('student-id').value = '';
-        modalTitle.innerText = 'Add New Student';
-        loadStudents();
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error('Not authenticated');
+
+            if (id) {
+                // UPDATE logic (To be implemented in server.js if needed, for now alert)
+                alert("Editing not yet fully linked to DB. Please delete and re-add if needed for now.");
+                // SchoolData.updateItem('students', id, studentData); 
+            } else {
+                // CREATE
+                const res = await fetch('/api/students', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(studentData)
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to add student');
+                }
+
+                alert('Student added successfully!');
+            }
+
+            modalToggle.checked = false;
+            studentForm.reset();
+            document.getElementById('student-id').value = '';
+            document.getElementById('student-password').value = '';
+            modalTitle.innerText = 'Add New Student';
+
+            // Reload from API
+            // We need to implement loadStudents using API in this file too!
+            // Currently loadStudents uses SchoolData.
+            window.location.reload(); // Quick fix to fetch fresh data
+
+        } catch (err) {
+            console.error(err);
+            alert(err.message);
+        } finally {
+            btn.textContent = 'Save Student';
+            btn.disabled = false;
+        }
     });
 
     loadStudents();
