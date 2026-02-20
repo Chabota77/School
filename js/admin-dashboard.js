@@ -514,8 +514,12 @@ document.addEventListener('DOMContentLoaded', () => {
         pubYear.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
 
         // Populate Terms
-        const terms = ['Term 1', 'Term 2', 'Term 3'];
-        pubTerm.innerHTML = terms.map(t => `<option value="${t}">${t}</option>`).join('');
+        const terms = [
+            { id: '1', name: 'Term 1' },
+            { id: '2', name: 'Term 2' },
+            { id: '3', name: 'Term 3' }
+        ];
+        pubTerm.innerHTML = terms.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
 
         const updateStatusUI = (isPublished) => {
             if (isPublished) {

@@ -48,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = nameInput.value.trim().toLowerCase();
                 const studentId = idInput.value.trim();
                 const termName = termSelect.value;
-                const termStr = termName.replace('Term ', 'T'); // E.g. 'T1'
+                const termStr = termName.replace('Term ', ''); // E.g. '1'
 
                 if ((!name && !studentId) || !termName) {
                     window.SchoolUtils.showToast('Enter name/ID and select term', 'error');

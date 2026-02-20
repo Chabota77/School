@@ -50,11 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadGrades = () => {
         const currentYear = new Date().getFullYear();
         const terms = [
-            { id: 'T1', name: 'Term 1' },
-            { id: 'T2', name: 'Term 2' },
-            { id: 'T3', name: 'Term 3' }
+            { id: '1', name: 'Term 1' },
+            { id: '2', name: 'Term 2' },
+            { id: '3', name: 'Term 3' }
         ];
-        const currentTermId = 'T1';
+        const currentTermId = '1';
 
         // Populate Select
         const termSelect = document.getElementById('termSelect');
