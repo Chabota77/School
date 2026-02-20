@@ -5,7 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Initialize Data & Theme
-    if (window.SchoolData) window.SchoolData.initData();
+
     if (window.SchoolUtils) window.SchoolUtils.initTheme();
 
     const path = window.location.pathname;
@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentTerm = null;
 
         if (resultsForm) {
-            resultsForm.addEventListener('submit', (e) => {
+            resultsForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
 
                 const nameInput = document.getElementById('studentName');
@@ -48,34 +48,43 @@ document.addEventListener('DOMContentLoaded', () => {
                 const name = nameInput.value.trim().toLowerCase();
                 const studentId = idInput.value.trim();
                 const termName = termSelect.value;
+                const termStr = termName.replace('Term ', 'T'); // E.g. 'T1'
 
                 if ((!name && !studentId) || !termName) {
                     window.SchoolUtils.showToast('Enter name/ID and select term', 'error');
                     return;
                 }
 
-                const db = window.SchoolData.getDB();
                 currentStudent = null;
+                const submitBtn = resultsForm.querySelector('button[type="submit"]');
+                const oldText = submitBtn.textContent;
+                submitBtn.textContent = 'Checking...';
+                submitBtn.disabled = true;
 
-                const termId = termName.replace('Term ', 'T');
-                const year = '2026';
+                try {
+                    const res = await fetch('/api/public/results', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ studentId, name, termStr })
+                    });
 
-                if (!window.SchoolData.isPublished(year, termId)) {
-                    window.SchoolUtils.showToast(`Results for ${termName} ${year} have not been released yet.`, 'error');
-                    resultsSection.style.display = 'none';
-                    if (downloadBtn) downloadBtn.style.display = 'none';
-                    return;
-                }
+                    const data = await res.json();
 
-                if (studentId) {
-                    currentStudent = db.students.find(s => s.id == studentId);
-                } else if (name) {
-                    currentStudent = db.students.find(s => s.name.toLowerCase().includes(name));
-                }
+                    if (!res.ok) {
+                        if (res.status === 403 && data.isPublished === false) {
+                            window.SchoolUtils.showToast(`Results for ${termName} have not been released yet.`, 'error');
+                        } else {
+                            window.SchoolUtils.showToast(data.error || 'Failed to check results', 'error');
+                        }
+                        resultsSection.style.display = 'none';
+                        if (downloadBtn) downloadBtn.style.display = 'none';
+                        return;
+                    }
 
-                if (currentStudent) {
+                    // Success handling
+                    currentStudent = data.student;
                     currentTerm = termName;
-                    currentResults = window.SchoolData.getStudentResults(currentStudent.id, termId);
+                    currentResults = data.results;
 
                     if (Object.keys(currentResults).length > 0) {
                         window.SchoolUtils.showToast('Results found', 'success');
@@ -96,10 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         resultsSection.style.display = 'none';
                         if (downloadBtn) downloadBtn.style.display = 'none';
                     }
-                } else {
-                    window.SchoolUtils.showToast('Student not found', 'error');
-                    resultsSection.style.display = 'none';
-                    if (downloadBtn) downloadBtn.style.display = 'none';
+                } catch (err) {
+                    console.error(err);
+                    window.SchoolUtils.showToast('Network error loading results', 'error');
+                } finally {
+                    submitBtn.textContent = oldText;
+                    submitBtn.disabled = false;
                 }
             });
         }
@@ -162,17 +173,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 5. Load Home Stats (if on home page)
-    const loadHomeStats = () => {
+    const loadHomeStats = async () => {
         const studentCountEl = document.getElementById('stat-students');
         const teacherCountEl = document.getElementById('stat-teachers');
 
-        if (studentCountEl && teacherCountEl && window.SchoolData) {
-            const students = window.SchoolData.getCollection('students');
-            const teachers = window.SchoolData.getCollection('teachers');
-
-            // Animated counts (simple implementation)
-            studentCountEl.textContent = students.length || '0';
-            teacherCountEl.textContent = teachers.length || '0';
+        if (studentCountEl && teacherCountEl) {
+            try {
+                const res = await fetch('/api/public/stats');
+                if (res.ok) {
+                    const data = await res.json();
+                    studentCountEl.textContent = data.totalStudents || '0';
+                    teacherCountEl.textContent = data.totalTeachers || '0';
+                }
+            } catch (err) {
+                console.error("Error loading home stats:", err);
+            }
         }
     };
     loadHomeStats();

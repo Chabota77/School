@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    const { SchoolData } = window;
     const user = JSON.parse(localStorage.getItem('currentUser'));
 
     // Verify User Role
@@ -27,10 +26,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    /* 
-    const teachers = SchoolData.getCollection('teachers');
-    const teacherProfile = teachers.find(t => t.userId === user.id) || teachers.find(t => t.email === user.username); 
-    */
 
     if (!teacherProfile) {
         alert('Teacher profile not found for this user.');
@@ -52,7 +47,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         const [classesRes, studentsRes] = await Promise.all([
             fetch('/api/classes', { headers: { 'Authorization': `Bearer ${token}` } }),
-            fetch('/api/students', { headers: { 'Authorization': `Bearer ${token}` } })
+            fetch('/api/teacher/students', { headers: { 'Authorization': `Bearer ${token}` } })
         ]);
 
         if (classesRes.ok) {
@@ -62,9 +57,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         if (studentsRes.ok) {
-            const allStudents = await studentsRes.json();
-            // Filter students in my classes
-            myStudents = allStudents.filter(s => teacherProfile.classIds.includes(s.class_id));
+            myStudents = await studentsRes.json();
         }
 
     } catch (e) {
@@ -95,10 +88,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const cls = myClasses.find(c => c.id === s.class_id);
             return `
             <tr>
-                <td>${s.id}</td>
+                <td>${s.roll_number || s.id}</td>
                 <td>${s.name}</td>
                 <td>${s.gender || 'N/A'}</td>
-                <td>${cls ? cls.name : (s.class_name || s.class_id)}</td>
+                <td>${s.class_name || (cls ? cls.name : s.class_id)}</td>
             </tr>
             `;
         }).join('');

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    const { SchoolData } = window;
+
 
     // Elements
     const tableBody = document.querySelector('.payments-table tbody');
@@ -37,16 +37,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             const headers = { 'Authorization': `Bearer ${token}` };
 
-            const [studentsRes, paymentsRes] = await Promise.all([
+            const [studentsRes, paymentsRes, classesRes] = await Promise.all([
                 fetch('/api/students', { headers }),
-                fetch('/api/payments', { headers })
+                fetch('/api/payments', { headers }),
+                fetch('/api/classes', { headers })
             ]);
 
-            if (!studentsRes.ok || !paymentsRes.ok) throw new Error('Failed to fetch data');
+            if (!studentsRes.ok || !paymentsRes.ok || !classesRes.ok) throw new Error('Failed to fetch data');
 
             const students = await studentsRes.json();
             const payments = await paymentsRes.json();
-            const classes = SchoolData.getClasses(); // Keep classes local for now or fetch if available
+            const classes = await classesRes.json();
 
             // Calculate Student Balances
             const FEES = 5000;
@@ -248,12 +249,25 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     };
 
-    window.deletePayment = (id) => {
+    window.deletePayment = async (id) => {
         if (confirm('Are you sure you want to delete this payment transaction? This will affect the student balance.')) {
-            SchoolData.deleteItem('payments', id);
-            historyModal.style.display = 'none'; // Close logic handling is simple for now
-            loadPayments();
-            alert('Payment deleted.');
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`/api/payments/${id}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (res.ok) {
+                    historyModal.style.display = 'none';
+                    loadPayments();
+                    alert('Payment deleted.');
+                } else {
+                    alert('Failed to delete payment');
+                }
+            } catch (e) {
+                console.error(e);
+                alert('Network Error');
+            }
         }
     }
 

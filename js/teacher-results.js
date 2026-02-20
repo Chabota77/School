@@ -1,51 +1,84 @@
-document.addEventListener('DOMContentLoaded', () => {
-    const { SchoolData } = window;
+document.addEventListener('DOMContentLoaded', async () => {
     const user = JSON.parse(localStorage.getItem('currentUser'));
+    const token = localStorage.getItem('token');
 
-    if (!user || user.role !== 'teacher') {
+    if (!user || user.role !== 'teacher' || !token) {
         window.location.href = '../login.html';
-        return;
-    }
-
-    const teachers = SchoolData.getCollection('teachers');
-    const teacherProfile = teachers.find(t => t.userId === user.id) || teachers.find(t => t.email === user.username);
-
-    if (!teacherProfile) {
-        alert('Teacher profile not found.');
         return;
     }
 
     // Context: Selectors
     const selectYear = document.getElementById('selectYear');
     const selectTerm = document.getElementById('selectTerm');
+    let myStudents = [];
+    let allSubjects = [];
+    let mySubjectIds = [];
 
-    // Populate Selectors
+    // Populate Selectors - Keeping static for now, ideally fetch from backend config
     const initSelectors = () => {
-        const years = SchoolData.getDB().academicYears || [{ id: '2026', name: '2026' }];
-        const terms = SchoolData.getTerms();
+        const years = [{ id: '2026', name: '2026', current: true }, { id: '2025', name: '2025' }];
+        const terms = [
+            { id: '1', name: 'Term 1', current: true },
+            { id: '2', name: 'Term 2' },
+            { id: '3', name: 'Term 3' }
+        ];
 
         selectYear.innerHTML = years.map(y => `<option value="${y.id}" ${y.current ? 'selected' : ''}>${y.name}</option>`).join('');
         selectTerm.innerHTML = terms.map(t => `<option value="${t.id}" ${t.current ? 'selected' : ''}>${t.name}</option>`).join('');
 
         // Listeners to reload data
-        selectYear.addEventListener('change', loadStudents);
-        selectTerm.addEventListener('change', loadStudents);
+        selectYear.addEventListener('change', renderTable);
+        selectTerm.addEventListener('change', renderTable);
     };
 
-    // Load Students and their results for SELECTED context
-    const myClasses = teacherProfile.classIds || [];
-    const myStudents = SchoolData.getCollection('students').filter(s => myClasses.includes(s.classId));
+    const fetchInitialData = async () => {
+        try {
+            // 1. Fetch Students (Includes my subject assignments indirectly, or we fetch subjects separately)
+            const stuRes = await fetch('/api/teacher/students', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!stuRes.ok) throw new Error('Failed to fetch students');
+            myStudents = await stuRes.json();
 
-    // Subjects Map (Name -> ID)
-    const subjects = SchoolData.getSubjects();
-    const subjectsMap = {};
-    const subjectsMapInv = {};
-    subjects.forEach(s => {
-        subjectsMap[s.name] = s.id;
-        subjectsMapInv[s.id] = s.name;
-    });
+            // 2. Fetch All Subjects to map names
+            const subRes = await fetch('/api/subjects');
+            if (!subRes.ok) throw new Error('Failed to fetch subjects');
+            allSubjects = await subRes.json();
 
-    const loadStudents = () => {
+            // 3. Determine My Assigned Subjects from the students list (which is based on classes I teach)
+            // Or better, fetch teacher profile to get explicit subjects.
+            const tRes = await fetch(`/api/teachers/${user.id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (tRes.ok) {
+                const tData = await tRes.json();
+                // Assuming the endpoint returns subjectIds array. If not, we extract from assignments.
+                // Let's fetch my profile from the main teachers list for now to get classes/subjects
+            }
+
+            // Workaround: Get subjects I teach by fetching all teachers and finding myself
+            const allTRes = await fetch('/api/teachers', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (allTRes.ok) {
+                const allTData = await allTRes.json();
+                const me = allTData.find(t => t.user_id === user.id);
+                if (me && me.subject_names) {
+                    const mySubNames = me.subject_names.split(', ');
+                    mySubjectIds = allSubjects.filter(s => mySubNames.includes(s.name)).map(s => s.id);
+                }
+            }
+
+
+            renderTable();
+
+        } catch (e) {
+            console.error('Initialization error:', e);
+            document.getElementById('resultsTableBody').innerHTML = '<tr><td colspan="100%">Error loading data.</td></tr>';
+        }
+    };
+
+    const renderTable = async () => {
         const currentYear = selectYear.value;
         const currentTermId = selectTerm.value;
 
@@ -54,11 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!thead || !tbody) return;
 
-        // Determine Assigned Subjects
-        // If teacherProfile.subjectIds is empty or undefined, defaults to empty array
-        const mySubjectIds = teacherProfile.subjectIds || [];
         // Map to Objects
-        const mySubjects = SchoolData.getSubjects().filter(s => mySubjectIds.includes(s.id));
+        const mySubjects = allSubjects.filter(s => mySubjectIds.includes(s.id));
 
         if (mySubjects.length === 0) {
             tbody.innerHTML = '<tr><td colspan="100%">You have no subjects assigned. Please contact Admin.</td></tr>';
@@ -74,15 +104,28 @@ document.addEventListener('DOMContentLoaded', () => {
         headerHTML += '<th>Comments</th></tr>';
         thead.innerHTML = headerHTML;
 
-        if (myStudents.length === 0) {
+        // Filter students to unique set (might be duplicates if we joined with multiple assignments)
+        const uniqueStudents = [];
+        const map = new Map();
+        for (const item of myStudents) {
+            if (!map.has(item.id)) {
+                map.set(item.id, true);    // set any value to Map
+                uniqueStudents.push({
+                    id: item.id,
+                    name: item.name,
+                    rollNo: item.roll_number || item.id
+                });
+            }
+        }
+
+        if (uniqueStudents.length === 0) {
             tbody.innerHTML = '<tr><td colspan="100%">No students assigned to your classes.</td></tr>';
             return;
         }
 
         // BUILD DYNAMIC ROWS
-        tbody.innerHTML = myStudents.map(s => {
-            // Display Logic for ID
-            const displayId = s.rollNo || (2500000 + (parseInt(s.id.replace(/\D/g, '')) || 0));
+        tbody.innerHTML = uniqueStudents.map(s => {
+            const displayId = s.rollNo;
 
             let rowHTML = `<tr data-student-id="${s.id}">
                 <td><strong>${displayId}</strong></td>
@@ -99,24 +142,35 @@ document.addEventListener('DOMContentLoaded', () => {
         loadExistingResults(currentYear, currentTermId);
     };
 
-    const loadExistingResults = (year, term) => {
-        const allResults = SchoolData.getCollection('results');
+    const loadExistingResults = async (year, term) => {
+        try {
+            const res = await fetch(`/api/results?year=${year}&term=${term}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error('Failed to fetch existing results');
+            const relevantResults = await res.json();
 
-        // Filter results for my students and SELECTED context
-        const relevantResults = allResults.filter(r =>
-            r.termId === term &&
-            r.yearId === year &&
-            myStudents.some(s => s.id === r.studentId)
-        );
+            // Our unique students IDs
+            const stuIds = myStudents.map(s => s.id);
 
-        relevantResults.forEach(r => {
-            const row = document.querySelector(`tr[data-student-id="${r.studentId}"]`);
-            if (row) {
-                // Find input via Subject ID now, more robust
-                const input = row.querySelector(`input[data-subject-id="${r.subjectId}"]`);
-                if (input) input.value = r.score;
-            }
-        });
+            relevantResults.forEach(r => {
+                if (stuIds.includes(r.student_id)) {
+                    const row = document.querySelector(`tr[data-student-id="${r.student_id}"]`);
+                    if (row) {
+                        const input = row.querySelector(`input[data-subject-id="${r.subject_id}"]`);
+                        if (input) input.value = r.marks;
+
+                        // Put comment in the last box (simplistic assumption that 1 comment per student row is enough for UI)
+                        if (r.comments) {
+                            const commentInput = row.querySelector('.comment-input');
+                            if (commentInput && !commentInput.value) commentInput.value = r.comments;
+                        }
+                    }
+                }
+            });
+        } catch (e) {
+            console.error('Error loading existing results:', e);
+        }
     };
 
     // Save Results with Custom Modal
@@ -131,11 +185,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Check if any data to save
             const hasData = Array.from(rows).some(r =>
-                Array.from(r.querySelectorAll('.grade-input')).some(i => i.value !== '')
+                Array.from(r.querySelectorAll('.grade-input')).some(i => i.value !== '') ||
+                (r.querySelector('.comment-input') && r.querySelector('.comment-input').value !== '')
+
             );
 
             if (!hasData) {
-                if (window.SchoolUtils) window.SchoolUtils.showToast('No grades entered to save.', 'warning');
+                alert('No grades or comments entered to save.');
                 return;
             }
 
@@ -154,59 +210,66 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 modal.checked = true;
 
-                yesBtn.onclick = () => {
+                yesBtn.onclick = async () => {
                     const btn = saveBtn; // safe ref
                     btn.textContent = 'Saving...';
                     btn.disabled = true;
 
-                    let updateCount = 0;
+                    const payload = [];
 
                     rows.forEach(row => {
                         const studentId = row.dataset.studentId;
                         const inputs = row.querySelectorAll('.grade-input');
+                        const commentInput = row.querySelector('.comment-input');
+                        const comments = commentInput && commentInput.value ? commentInput.value : '';
 
                         inputs.forEach(input => {
                             const score = input.value;
                             // Explicitly check for empty string to allow 0
                             if (score !== '') {
                                 const subjectId = input.dataset.subjectId;
-
                                 if (subjectId) {
-                                    // Check if exists
-                                    const allResults = SchoolData.getCollection('results');
-                                    const existingIndex = allResults.findIndex(r =>
-                                        r.studentId === studentId &&
-                                        r.subjectId === subjectId &&
-                                        r.termId === currentTermId &&
-                                        r.yearId === currentYear
-                                    );
-
-                                    if (existingIndex > -1) {
-                                        // Update
-                                        allResults[existingIndex].score = parseInt(score);
-                                        SchoolData.saveDB(SchoolData.getDB());
-                                    } else {
-                                        // Add
-                                        SchoolData.addItem('results', {
-                                            studentId,
-                                            subjectId,
-                                            termId: currentTermId,
-                                            yearId: currentYear,
-                                            score: parseInt(score)
-                                        });
-                                    }
-                                    updateCount++;
+                                    payload.push({
+                                        studentId: parseInt(studentId),
+                                        subjectId: parseInt(subjectId),
+                                        marks: parseInt(score),
+                                        comments: comments,
+                                        year: parseInt(currentYear),
+                                        term: currentTermId
+                                    });
                                 }
                             }
                         });
                     });
 
-                    setTimeout(() => {
+                    try {
+                        const res = await fetch('/api/results', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({ results: payload })
+                        });
+
+                        if (res.ok) {
+                            setTimeout(() => {
+                                modal.checked = false;
+                                alert(`Successfully saved grades!`);
+                                btn.textContent = 'Save Results';
+                                btn.disabled = false;
+                            }, 500);
+                        } else {
+                            const err = await res.json();
+                            throw new Error(err.error || 'Failed to save');
+                        }
+
+                    } catch (e) {
+                        alert('Error saving results: ' + e.message);
                         modal.checked = false;
-                        if (window.SchoolUtils) window.SchoolUtils.showToast(`Successfully saved ${updateCount} grades!`, 'success');
                         btn.textContent = 'Save Results';
                         btn.disabled = false;
-                    }, 500);
+                    }
                 };
 
                 cancelBtn.onclick = () => {
@@ -217,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     initSelectors();
-    loadStudents(); // Initial load
+    fetchInitialData(); // Initial load
 
     // Download CSV (Dynamic)
     document.getElementById('downloadBtn').addEventListener('click', (e) => {
@@ -234,8 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
         // 1. Get Headers
         const headerCells = thead.querySelectorAll('th');
         const headers = Array.from(headerCells).map(th => th.innerText);
-        // Exclude last header if it is "Comments" or similar actions, if needed
-        // For now, keep all.
 
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += headers.join(",") + "\n";
@@ -248,8 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Name is text in first cell
             rowData.push(cells[0].innerText);
 
-            // Inputs are in subsequent cells (except last maybe)
-            // We can just iterate the cells to be safe
+            // Inputs are in subsequent cells
             for (let i = 1; i < cells.length; i++) {
                 const input = cells[i].querySelector('input');
                 if (input) {
@@ -271,6 +331,4 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.removeChild(link);
     });
 
-    // Run
-    loadStudents();
 });

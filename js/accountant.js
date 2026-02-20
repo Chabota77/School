@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = window.SchoolAuth.requireAuth('accountant');
     if (!user) return; // Auth redirects if fail
 
-    const { SchoolData, SchoolUtils } = window;
+    const { SchoolUtils } = window;
 
     // --- STATE ---
     let allPayments = [];
@@ -21,19 +21,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- LOADERS ---
     function populateDropdowns() {
         // Years & Terms
-        const years = SchoolData.getDB().academicYears || [];
-        const terms = SchoolData.getTerms();
+        const currentYear = new Date().getFullYear();
+        const years = [currentYear - 1, currentYear, currentYear + 1, currentYear + 2];
+        const terms = ['Term 1', 'Term 2', 'Term 3'];
 
         const yearSelect = document.getElementById('payYear');
         const termSelect = document.getElementById('payTerm');
         const filterTerm = document.getElementById('filter-term');
 
-        if (yearSelect) yearSelect.innerHTML = years.map(y => `<option value="${y.id}" ${y.current ? 'selected' : ''}>${y.name}</option>`).join('');
-        if (termSelect) termSelect.innerHTML = terms.map(t => `<option value="${t.id}" ${t.current ? 'selected' : ''}>${t.name}</option>`).join('');
+        if (yearSelect) yearSelect.innerHTML = years.map(y => `<option value="${y}" ${y === currentYear ? 'selected' : ''}>${y}</option>`).join('');
+        if (termSelect) termSelect.innerHTML = terms.map((t, i) => `<option value="${t}" ${i === 0 ? 'selected' : ''}>${t}</option>`).join('');
 
         // Filter dropdown
         if (filterTerm) {
-            filterTerm.innerHTML = '<option value="">All Terms</option>' + terms.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+            filterTerm.innerHTML = '<option value="">All Terms</option>' + terms.map(t => `<option value="${t}">${t}</option>`).join('');
         }
     }
 

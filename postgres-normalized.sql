@@ -141,6 +141,14 @@ CREATE TABLE results (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS published_results (
+    id SERIAL PRIMARY KEY,
+    year INTEGER NOT NULL,
+    term VARCHAR(50) NOT NULL,
+    is_published BOOLEAN DEFAULT false,
+    UNIQUE(year, term)
+);
+
 -- Payments
 CREATE TABLE payments (
     id SERIAL PRIMARY KEY,

@@ -131,48 +131,65 @@
   <script src="js/auth.js"></script>
   <script src="js/app.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Load classes
-      if (window.SchoolData) {
-        const classes = window.SchoolData.getClasses();
-        const select = document.getElementById('class_applied_id');
-        if (select) {
-          // Extract unique base names (e.g., "Grade 1" from "Grade 1A")
-          const uniqueClasses = [...new Set(classes.map(c => c.name.replace(/[A-Z]$/, '').trim()))];
-          select.innerHTML = '<option value="">Select Class</option>' +
-            uniqueClasses.map(name => `<option value="${name}">${name}</option>`).join('');
+    document.addEventListener('DOMContentLoaded', async () => {
+      // Load classes from API
+      try {
+        const res = await fetch('/api/classes');
+        if (res.ok) {
+          const classes = await res.json();
+          const select = document.getElementById('class_applied_id');
+          if (select) {
+            select.innerHTML = '<option value="">Select Class</option>' +
+              classes.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+          }
         }
-      }
+      } catch (e) { console.error("Error loading classes", e); } // Silently fail or retry
 
-      document.getElementById('admissionForm').addEventListener('submit', (e) => {
+      document.getElementById('admissionForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         const studentName = document.getElementById('student_name').value;
-        const className = document.getElementById('class_applied_id').value;
+        const classId = document.getElementById('class_applied_id').value;
         const parentName = document.getElementById('parent_name').value;
         const phone = document.getElementById('phone').value;
         const gender = document.getElementById('gender').value;
 
         const msg = document.getElementById('formMessage');
+        const btn = e.target.querySelector('button[type="submit"]');
 
-        if (studentName && className && parentName && phone && gender) {
-          // Add to Admissions Collection
-          window.SchoolData.addItem('admissions', {
-            student_name: studentName,
-            class_name: className,
-            date_applied: new Date().toISOString().split('T')[0],
-            parent_name: parentName,
-            phone: phone,
-            gender: gender,
-            status: 'Pending',
-            email: 'contact@parent.com' // Mock
-          });
+        if (studentName && classId && parentName && phone && gender) {
+          btn.textContent = 'Submitting...';
+          btn.disabled = true;
 
-          msg.style.color = 'green';
-          msg.textContent = 'Application submitted successfully! We will contact you soon.';
-          document.getElementById('admissionForm').reset();
+          try {
+            const res = await fetch('/api/admissions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                student_name: studentName,
+                class_applied_id: classId,
+                parent_name: parentName,
+                phone: phone,
+                email: 'contact@parent.com', // Mock or add input
+                age: 10, // Mock or add input
+                gender: gender
+              })
+            });
 
-          // Log it
-          if (window.SchoolUtils) window.SchoolUtils.logAction('New Admission', `Application received for ${studentName}`);
+            if (res.ok) {
+              msg.style.color = 'green';
+              msg.textContent = 'Application submitted successfully! We will contact you soon.';
+              document.getElementById('admissionForm').reset();
+            } else {
+              throw new Error('Submission failed');
+            }
+          } catch (err) {
+            console.error(err);
+            msg.style.color = 'red';
+            msg.textContent = 'Error submitting application. Please try again.';
+          } finally {
+            btn.textContent = 'Submit Application';
+            btn.disabled = false;
+          }
 
         } else {
           msg.style.color = 'red';

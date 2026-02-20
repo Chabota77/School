@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const user = window.SchoolAuth.requireAuth('info_officer');
     if (!user) return;
 
-    const { SchoolData, SchoolUtils } = window;
+    const { SchoolUtils } = window;
 
     // --- NAVIGATION ---
     const handleHashChange = () => {

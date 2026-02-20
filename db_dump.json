@@ -1,0 +1,295 @@
+{
+  "students": [
+    {
+      "id": 2,
+      "user_id": 13,
+      "class_id": 1,
+      "roll_number": null
+    }
+  ],
+  "payments": [
+    {
+      "id": 1,
+      "student_id": null,
+      "amount": "100.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T08:49:17.448Z"
+    },
+    {
+      "id": 2,
+      "student_id": null,
+      "amount": "100.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T08:49:19.338Z"
+    },
+    {
+      "id": 3,
+      "student_id": null,
+      "amount": "100.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-10T22:00:00.000Z",
+      "created_at": "2026-02-18T08:54:19.058Z"
+    },
+    {
+      "id": 4,
+      "student_id": null,
+      "amount": "234.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:08:00.311Z"
+    },
+    {
+      "id": 5,
+      "student_id": null,
+      "amount": "665.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-01-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:13:17.466Z"
+    },
+    {
+      "id": 6,
+      "student_id": null,
+      "amount": "665.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-01-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:13:18.056Z"
+    },
+    {
+      "id": 7,
+      "student_id": null,
+      "amount": "222.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:24:30.221Z"
+    },
+    {
+      "id": 8,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:34:54.246Z"
+    },
+    {
+      "id": 9,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:35:59.798Z"
+    },
+    {
+      "id": 10,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:37:11.549Z"
+    },
+    {
+      "id": 11,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:38:00.760Z"
+    },
+    {
+      "id": 12,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:39:16.325Z"
+    },
+    {
+      "id": 13,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:40:51.326Z"
+    },
+    {
+      "id": 14,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:44:01.002Z"
+    },
+    {
+      "id": 15,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:51:51.448Z"
+    },
+    {
+      "id": 16,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:53:15.951Z"
+    },
+    {
+      "id": 17,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:57:33.022Z"
+    },
+    {
+      "id": 18,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T09:58:26.420Z"
+    },
+    {
+      "id": 19,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:01:53.153Z"
+    },
+    {
+      "id": 20,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:01:59.345Z"
+    },
+    {
+      "id": 21,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:02:57.384Z"
+    },
+    {
+      "id": 22,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:03:36.563Z"
+    },
+    {
+      "id": 23,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:04:21.457Z"
+    },
+    {
+      "id": 24,
+      "student_id": null,
+      "amount": "500.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:04:26.944Z"
+    },
+    {
+      "id": 25,
+      "student_id": null,
+      "amount": "399.00",
+      "term": "Term 1",
+      "year": 2026,
+      "method": "Cash",
+      "received_by": null,
+      "date": "2026-02-17T22:00:00.000Z",
+      "created_at": "2026-02-18T10:15:39.689Z"
+    }
+  ],
+  "users": [
+    {
+      "id": 13,
+      "name": "test student",
+      "email": "student1771374058778@school.com",
+      "role": "student"
+    }
+  ]
+}

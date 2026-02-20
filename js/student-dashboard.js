@@ -1,5 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    const { SchoolData } = window;
     const user = JSON.parse(localStorage.getItem('currentUser'));
 
     // 1. Auth Guard
@@ -8,38 +7,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
 
-    // 2. Resolve Student Entity
-    const students = SchoolData.getCollection('students'); // Assuming collection name
-    // Try by userId mapping OR name fallback (mock data consistency)
-    let student = students.find(s => s.userId === user.id);
+    // 2. Resolve Student Entity & 3. UI Initialization
+    const updateProfile = async () => {
+        try {
+            const response = await fetch('/api/student/profile', {
+                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+            });
 
-    // Fallback: If mock data doesn't link userId U3 to S001 explicitly in code, find by name?
-    // In data.js, S001 has userId: 'U3'. So this should work.
-    if (!student) {
-        // Fallback for demo if users aren't perfectly mapped
-        console.warn('Student not explicitly mapped to user. Attempting name match or default.');
-        student = students.find(s => s.name === user.name) || students[0];
-    }
+            if (!response.ok) throw new Error('Failed to fetch profile');
 
-    if (!student) {
-        alert('Student record not found.');
-        return;
-    }
+            const student = await response.json();
+            window.currentStudent = student; // Store for other functions
 
-    // 3. UI Initialization
-    const updateProfile = () => {
-        document.getElementById('studentName').textContent = student.name;
-        // Logic for ID: prefer rollNo, else computed
-        const displayId = student.rollNo || (2500000 + (parseInt(student.id.replace(/\D/g, '')) || 0));
-        document.getElementById('studentIdDisplay').textContent = displayId;
+            document.getElementById('studentName').textContent = student.name;
+            document.getElementById('studentIdDisplay').textContent = student.roll_number || student.id;
 
-        // Sidebar Initials
-        const initials = student.name.split(' ').map(n => n[0]).join('').substring(0, 2);
-        document.querySelector('.avatar').textContent = initials;
+            // Sidebar Initials
+            const initials = student.name.split(' ').map(n => n[0]).join('').substring(0, 2);
+            document.querySelector('.avatar').textContent = initials;
 
-        // Class Name
-        const classObj = SchoolData.getClasses().find(c => c.id === student.classId);
-        document.getElementById('studentClassDisplay').textContent = classObj ? classObj.name : student.classId;
+            // Class Name
+            document.getElementById('studentClassDisplay').textContent = student.class_name || '-';
+
+            return student;
+        } catch (err) {
+            console.error(err);
+            alert('Could not load student profile. Please login again.');
+            window.location.href = '../login.html';
+        }
     };
 
     const updateStats = (results) => {
@@ -53,100 +48,124 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const loadGrades = () => {
-        const terms = SchoolData.getTerms();
-        const currentTerm = terms.find(t => t.current) || terms[0];
+        const currentYear = new Date().getFullYear();
+        const terms = [
+            { id: 'T1', name: 'Term 1' },
+            { id: 'T2', name: 'Term 2' },
+            { id: 'T3', name: 'Term 3' }
+        ];
+        const currentTermId = 'T1';
 
         // Populate Select
         const termSelect = document.getElementById('termSelect');
-        termSelect.innerHTML = terms.map(t => `<option value="${t.id}" ${t.current ? 'selected' : ''}>${t.name}</option>`).join('');
-        document.getElementById('currentTermDisplay').textContent = currentTerm.name;
+        termSelect.innerHTML = terms.map(t => `<option value="${t.id}" ${t.id === currentTermId ? 'selected' : ''}>${t.name} (${currentYear})</option>`).join('');
+
+        const updateDisplayTerm = (val) => {
+            const t = terms.find(x => x.id === val);
+            if (t) document.getElementById('currentTermDisplay').textContent = t.name;
+        };
+        updateDisplayTerm(currentTermId);
 
         // Fetch Results Function
-        const fetchAndRender = (termId) => {
+        const fetchAndRender = async (termStr) => {
             const tbody = document.getElementById('resultsTableBody');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px;">Loading...</td></tr>';
 
-            // 1. Check if Results are Published
-            // We need the Year Logic. Assuming Terms have a yearId or we pick from current setup.
-            // In data.js, Terms have yearId.
-            const terms = SchoolData.getTerms();
-            const selectedTermObj = terms.find(t => t.id === termId);
-            const yearId = selectedTermObj ? selectedTermObj.yearId : '2026'; // Default fallback
+            try {
+                // 1. Check if Results are Published
+                const pubRes = await fetch(`/api/results/publish?year=${currentYear}&term=${termStr}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                const pubData = await pubRes.json();
 
-            const isPub = SchoolData.isPublished(yearId, termId);
+                if (!pubData.isPublished) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">🔒 Results for this term have not been published yet.</td></tr>';
+                    document.getElementById('averageScoreDisplay').innerHTML = '<span style="font-size:0.6em; color:#888;">Pending</span>';
+                    return;
+                }
 
-            if (!isPub) {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:20px; color:#666;">🔒 Results for this term have not been published yet.</td></tr>';
-                document.getElementById('averageScoreDisplay').innerHTML = '<span style="font-size:0.6em; color:#888;">Pending</span>';
-                return;
+                // 2. Fetch Actual Results
+                const res = await fetch(`/api/results?year=${currentYear}&term=${termStr}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+
+                if (!res.ok) throw new Error('Failed to fetch results');
+                const results = await res.json();
+
+                if (results.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No results found for this term.</td></tr>';
+                    updateStats([]);
+                    return;
+                }
+
+                tbody.innerHTML = '';
+                const scores = [];
+
+                results.forEach(r => {
+                    scores.push({ score: r.marks });
+                    const numScore = parseInt(r.marks);
+                    let grade = 'F';
+                    let status = 'Fail';
+                    let statusClass = 'status-fail';
+
+                    if (numScore >= 75) { grade = 'A'; status = 'Pass'; statusClass = 'status-pass'; }
+                    else if (numScore >= 60) { grade = 'B'; status = 'Pass'; statusClass = 'status-pass'; }
+                    else if (numScore >= 50) { grade = 'C'; status = 'Pass'; statusClass = 'status-pass'; }
+                    else if (numScore >= 40) { grade = 'D'; status = 'Pending'; statusClass = 'status-fail'; }
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${r.subject_name || '-'}</td>
+                            <td>${r.marks}%</td>
+                            <td>${grade}</td>
+                            <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        </tr>
+                    `;
+                });
+
+                updateStats(scores);
+            } catch (err) {
+                console.error(err);
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red;">Error loading results.</td></tr>';
             }
-
-            // Use API
-            const resultsMap = SchoolData.getStudentResults(student.id, termId);
-            // API returns { SubjectName: Score }
-
-            const entries = Object.entries(resultsMap);
-            if (entries.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="4">No results found for this term.</td></tr>';
-                updateStats([]);
-                return;
-            }
-
-            // For stats, we need array of scores
-            const scores = [];
-
-            entries.forEach(([subject, score]) => {
-                scores.push({ score }); // minimal obj for stats calc logic
-                const numScore = parseInt(score);
-                let grade = 'F';
-                let status = 'Fail';
-                let statusClass = 'status-fail';
-
-                if (numScore >= 75) { grade = 'A'; status = 'Pass'; statusClass = 'status-pass'; }
-                else if (numScore >= 60) { grade = 'B'; status = 'Pass'; statusClass = 'status-pass'; }
-                else if (numScore >= 50) { grade = 'C'; status = 'Pass'; statusClass = 'status-pass'; }
-                else if (numScore >= 40) { grade = 'D'; status = 'Pending'; statusClass = 'status-fail'; } // Grading scale approx
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td>${subject}</td>
-                        <td>${score}%</td>
-                        <td>${grade}</td>
-                        <td><span class="status-badge ${statusClass}">${status}</span></td>
-                    </tr>
-                `;
-            });
-
-            updateStats(scores);
         };
 
         // Initial Load
         fetchAndRender(termSelect.value);
 
         // Change Listener
-        termSelect.addEventListener('change', (e) => fetchAndRender(e.target.value));
+        termSelect.addEventListener('change', (e) => {
+            updateDisplayTerm(e.target.value);
+            fetchAndRender(e.target.value);
+        });
     };
 
-    const loadAnnouncements = () => {
+    const loadAnnouncements = async () => {
         const list = document.getElementById('announcementList');
-        const anns = SchoolData.getCollection('announcements');
+        try {
+            const res = await fetch('/api/announcements');
+            const anns = await res.json();
 
-        // Filter: Everyone OR Pupils only
-        const myAnnouncements = anns.filter(a =>
-            a.audience === 'Everyone' || a.audience === 'Pupils only'
-        );
+            // Filter: Everyone OR Pupils only
+            const myAnnouncements = anns.filter(a =>
+                a.audience === 'Everyone' || a.audience === 'Pupils only'
+            );
 
-        if (myAnnouncements.length === 0) {
-            list.innerHTML = '<p>No announcements.</p>';
-            return;
+            if (myAnnouncements.length === 0) {
+                list.innerHTML = '<p>No announcements.</p>';
+                return;
+            }
+            list.innerHTML = myAnnouncements.map(a => `
+                <div class="announcement-item">
+                    <h4>${a.title}</h4>
+                    <p>${a.content}</p>
+                    <small>${new Date(a.created_at || Date.now()).toLocaleDateString()} • ${a.audience}</small>
+                </div>
+            `).join('');
+        } catch (e) {
+            console.error(e);
+            list.innerHTML = '<p>Error loading announcements.</p>';
         }
-        list.innerHTML = myAnnouncements.map(a => `
-            <div class="announcement-item">
-                <h4>${a.title}</h4>
-                <p>${a.content}</p>
-                <small>${a.date} • ${a.audience}</small>
-            </div>
-        `).join('');
     };
 
     const handleLogout = () => {
@@ -155,9 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // Run
-    updateProfile();
-    loadGrades();
-    loadAnnouncements();
+    updateProfile().then(() => {
+        loadGrades();
+        loadAnnouncements();
+    });
 
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
 

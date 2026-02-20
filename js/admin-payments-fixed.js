@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const monthSelect = document.getElementById('month');
     // const yearSpan = document.querySelector('.month-right .year'); // Deprecated
 
+    // Set default month to current month
+    if (monthSelect) {
+        monthSelect.value = new Date().getMonth();
+    }
+
     // Populate Years
     const populateYearSelect = (transactions) => {
         const yearSelect = document.getElementById('year-select');
@@ -44,29 +49,62 @@ document.addEventListener('DOMContentLoaded', () => {
     let allTransactions = []; // For stats or drill down if needed, but we use summaries.
 
     // Load Payments Summary (API)
+    // Load Payments Summary (API)
     const loadPayments = async () => {
         const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
+
         try {
             const tableBody = document.querySelector('.payments-table tbody');
             tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
 
-            // Fetch Summary
-            const res = await fetch('/api/payments', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const [studentsRes, paymentsRes, classesRes] = await Promise.all([
+                fetch('/api/students', { headers }),
+                fetch('/api/payments', { headers }), // Returns transactions
+                fetch('/api/classes', { headers })
+            ]);
 
-            if (res.ok) {
-                allSummaries = await res.json();
+            if (studentsRes.ok && paymentsRes.ok && classesRes.ok) {
+                const students = await studentsRes.json();
+                const payments = await paymentsRes.json();
+                const classes = await classesRes.json();
+
+                // Store raw transactions for history/stats
+                allTransactions = payments;
+                populateYearSelect(allTransactions);
+
+                // Calculate Student Summaries
+                const FEES = 5000; // Fixed fee for now
+
+                allSummaries = students.map(s => {
+                    // Use loose equality (==) for student_id to handle string/number mismatch
+                    const studentPayments = payments.filter(p => p.student_id == s.id);
+                    const paid = studentPayments.reduce((acc, curr) => acc + Number(curr.amount), 0);
+                    const balance = FEES - paid;
+
+                    let status = 'Unpaid';
+                    if (paid >= FEES) status = 'Paid';
+                    else if (paid > 0) status = 'Partial';
+
+                    const cls = classes.find(c => c.id == s.class_id) || { name: s.class_name || 'Unknown' };
+
+                    return {
+                        id: s.id,
+                        name: s.name,
+                        class_name: cls.name,
+                        total_fees: FEES,
+                        paid: paid,
+                        balance: balance,
+                        status: status
+                    };
+                });
+
                 populateClassFilter(allSummaries);
                 filterAndRender();
                 updateDashboardStats(allSummaries);
+                // Ensure date parsing matches user input
+                updateMonthlyStats();
 
-                // For Monthly Stats, we need transactions.
-                // Summary doesn't have dates. 
-                // We'll fetch transactions separately for the stats if robust, or skip for now.
-                // The original code filtered 'payments' collection by date.
-                // Let's implement /api/payments/transactions fetch for stats.
-                fetchTransactionsForStats();
             } else {
                 tableBody.innerHTML = '<tr><td colspan="7" style="color:red; text-align:center;">Failed to load data.</td></tr>';
             }
@@ -75,20 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // Fetch transactions solely for monthly stats calculation
-    const fetchTransactionsForStats = async () => {
-        const token = localStorage.getItem('token');
-        try {
-            const res = await fetch('/api/payments/transactions', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (res.ok) {
-                allTransactions = await res.json();
-                populateYearSelect(allTransactions);
-                updateMonthlyStats();
-            }
-        } catch (e) { console.error(e); }
-    };
+    // fetchTransactionsForStats REMOVED - Logic integrated above
 
     const updateDashboardStats = (data) => {
         const totalOutstanding = data.reduce((sum, s) => sum + (s.balance > 0 ? Number(s.balance) : 0), 0);
@@ -171,22 +196,47 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Add Payment Logic
     window.openAddPayment = (studentId, studentName) => {
-        // studentId here is the DB ID (from summary)
-        // We might want to show Roll No?
-        // Logic requires DB ID for POST.
-
         document.getElementById('payStudentId').value = Number(studentId) + 2500000; // Show readable ID
         document.getElementById('payStudentId').dataset.realId = studentId; // Store real ID
-
         document.getElementById('payStudentName').value = studentName;
+
+        // Reset for Add Mode
+        document.getElementById('payTransactionId').value = '';
+        document.getElementById('payAmount').value = '';
+        document.getElementById('payDate').value = new Date().toISOString().split('T')[0];
+        document.querySelector('#addPaymentModal h3').textContent = 'Record Payment';
+        document.querySelector('#paymentForm button[type="submit"]').textContent = 'Save Payment';
+
         addPaymentModal.style.display = 'flex';
+    };
+
+    window.openEditPayment = (id, amount, date, method, studentId, studentName) => {
+        // Populate for Edit Mode
+        document.getElementById('payTransactionId').value = id;
+        document.getElementById('payStudentId').value = Number(studentId) + 2500000;
+        document.getElementById('payStudentId').dataset.realId = studentId;
+        document.getElementById('payStudentName').value = studentName;
+
+        document.getElementById('payAmount').value = amount;
+        document.getElementById('payDate').value = date.split('T')[0];
+        document.getElementById('payMethod').value = method;
+
+        document.querySelector('#addPaymentModal h3').textContent = 'Update Payment';
+        document.querySelector('#paymentForm button[type="submit"]').textContent = 'Update Payment';
+
+        addPaymentModal.style.display = 'flex';
+        // HTML doesn't have openEditPayment called directly from history, 
+        // we call it from the history modal which is already open? 
+        // No, we might want to close history modal or keep it open?
+        // Let's close history modal to avoid stacking.
+        historyModal.style.display = 'none';
     };
 
     paymentForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const displayId = document.getElementById('payStudentId').value;
         const realId = document.getElementById('payStudentId').dataset.realId || (Number(displayId) - 2500000);
-        // Fallback calculation if edited? Ideally user shouldn't edit.
+        const transactionId = document.getElementById('payTransactionId').value;
 
         const amount = document.getElementById('payAmount').value;
         const date = document.getElementById('payDate').value;
@@ -194,18 +244,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const token = localStorage.getItem('token');
 
         try {
-            const res = await fetch('/api/payments', {
-                method: 'POST',
+            let url = '/api/payments';
+            let methodType = 'POST';
+
+            if (transactionId) {
+                url = `/api/payments/${transactionId}`;
+                methodType = 'PUT';
+            }
+
+            const res = await fetch(url, {
+                method: methodType,
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({
                     student_id: realId,
                     amount, date, method,
-                    year: '2026', term: 'Term 1' // Defaulting for now
+                    year: '2026', term: 'Term 1'
                 })
             });
 
             if (res.ok) {
-                alert('Payment recorded successfully!');
+                alert(`Payment ${transactionId ? 'updated' : 'recorded'} successfully!`);
                 addPaymentModal.style.display = 'none';
                 paymentForm.reset();
                 loadPayments();
@@ -238,6 +296,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <td>ZMW ${formatMoney(t.amount)}</td>
                         <td>${t.method}</td>
                         <td>
+                            <button class="btn edit view-mode" onclick="openEditPayment('${t.id}', '${t.amount}', '${t.date}', '${t.method}', '${studentId}', '${studentName}')" style="padding: 2px 5px; font-size: 0.8em; background:#10b981; color:white; margin-right:5px;">Edit</button>
                             <button class="btn delete view-mode" onclick="deletePayment('${t.id}')" style="padding: 2px 5px; font-size: 0.8em; background:#ef4444; color:white;">Delete</button>
                         </td>
                     </tr>

@@ -3,58 +3,53 @@
  * Generates statistics for the Admin Dashboard.
  */
 
+/**
+ * Reporting & Analytics Module
+ * Generates statistics for the Admin Dashboard.
+ */
+
 window.SchoolReports = {
-    getClassStats: (classId) => {
-        const students = window.SchoolData.getStudentByClass(classId);
-        const results = window.SchoolData.getDB().results.filter(r => students.some(s => s.id === r.studentId));
+    exportData: async (type) => {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) throw new Error("Not authenticated");
 
-        if (students.length === 0) return null;
+            window.SchoolUtils.showToast('Generating report...', 'info');
 
-        const totalStudents = students.length;
-        const totalScores = results.reduce((sum, r) => sum + parseInt(r.score), 0);
-        const averageScore = results.length ? (totalScores / results.length).toFixed(1) : 0;
+            const res = await fetch('/api/reports/summary', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-        // Pass rate (assume 50% pass)
-        // Group by student to see if they passed overall? Or just average?
-        // Let's do simple subject pass rate
-        const passes = results.filter(r => parseInt(r.score) >= 50).length;
-        const passRate = results.length ? ((passes / results.length) * 100).toFixed(1) : 0;
+            if (!res.ok) throw new Error("Failed to fetch report data");
+            const data = await res.json();
 
-        return {
-            totalStudents,
-            averageScore,
-            passRate
-        };
-    },
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Category,Count\n";
+            csvContent += `Total Students,${data.totalStudents}\n`;
+            csvContent += `Total Teachers,${data.totalTeachers}\n`;
+            csvContent += `Pending Admissions,${data.pendingAdmissions}\n`;
 
-    exportData: (type) => {
-        const students = window.SchoolData.getCollection('students');
-        const teachers = window.SchoolData.getCollection('teachers');
-        const admissions = window.SchoolData.getCollection('admissions');
+            // Add breakdown by class
+            csvContent += "\nClass,Student Count\n";
+            data.classCounts.forEach(c => {
+                csvContent += `${c.name},${c.count}\n`;
+            });
 
-        let csvContent = "data:text/csv;charset=utf-8,";
-        csvContent += "Category,Count\n";
-        csvContent += `Total Students,${students.length}\n`;
-        csvContent += `Total Teachers,${teachers.length}\n`;
-        csvContent += `Pending Admissions,${admissions.filter(a => a.status === 'Pending').length}\n`;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `school_summary_report_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
 
-        // Add breakdown by class
-        csvContent += "\nClass,Student Count\n";
-        const classes = window.SchoolData.getClasses();
-        classes.forEach(c => {
-            const count = students.filter(s => s.classId === c.id).length;
-            csvContent += `${c.name},${count}\n`;
-        });
-
-        const encodedUri = encodeURI(csvContent);
-        const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `school_summary_report_${new Date().toISOString().split('T')[0]}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        window.SchoolUtils.showToast('Export successful!', 'success');
-        window.SchoolUtils.logAction('Export', `Downloaded ${type} report`);
+            window.SchoolUtils.showToast('Export successful!', 'success');
+            if (window.SchoolUtils.logAction) {
+                window.SchoolUtils.logAction('Export', `Downloaded ${type} report`);
+            }
+        } catch (error) {
+            console.error(error);
+            window.SchoolUtils.showToast('Error generating report', 'error');
+        }
     }
 };
