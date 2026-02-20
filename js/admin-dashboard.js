@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         data.forEach(a => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-            < td > ${a.student_name}</td >
+                <td>${a.student_name}</td>
                 <td>${a.class_name || 'N/A'}</td>
                 <td>${a.gender || 'N/A'}</td> 
                 <td>${new Date(a.date_applied || Date.now()).toLocaleDateString()}</td>
@@ -291,7 +291,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         const params = new URLSearchParams(items).toString();
-        const url = `acceptance - letter.html ? ${params} `;
+        const url = `acceptance-letter.html?${params}`;
 
         // Open in new tab
         window.open(url, '_blank');
@@ -300,11 +300,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.updateAdmission = async (id, status) => {
         try {
             const token = localStorage.getItem('token');
-            const res = await fetch(`/ api / admissions / ${id} `, {
+            const res = await fetch(`/api/admissions/${id}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token} `
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ status })
             });
@@ -314,7 +314,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     downloadAdmissionLetter(id);
                     if (window.SchoolUtils) window.SchoolUtils.showToast('Admission Approved & Letter Generated', 'success');
                 } else {
-                    alert(`Admission ${status} `);
+                    alert(`Admission ${status}`);
                 }
 
                 loadAdmissions();
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.deleteAnnouncement = async (id) => {
         if (confirm('Delete announcement?')) {
             const token = localStorage.getItem('token');
-            await fetch(`/ api / announcements / ${id} `, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token} ` } });
+            await fetch(`/api/announcements/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
             loadAnnouncements();
         }
     };
