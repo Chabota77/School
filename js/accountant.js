@@ -7,6 +7,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- STATE ---
     let allPayments = [];
+    let allSummaries = [];
+    let allTransactions = [];
 
     // --- INIT ---
     function init() {
@@ -91,21 +93,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadPayments() {
         const token = localStorage.getItem('token');
+        const headers = { 'Authorization': `Bearer ${token}` };
         try {
-            // Fetch Student Summary (Matches Admin View)
-            const summaryRes = await fetch('/api/payments', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
+            const tbody = document.getElementById('paymentsTableBody');
+            if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Loading...</td></tr>';
 
-            if (summaryRes.ok) {
-                allSummaries = await summaryRes.json();
-                renderPayments(allSummaries);
+            const [studentsRes, paymentsRes, classesRes] = await Promise.all([
+                fetch('/api/students', { headers }),
+                fetch('/api/payments', { headers }),
+                fetch('/api/classes', { headers })
+            ]);
+
+            if (studentsRes.ok && paymentsRes.ok && classesRes.ok) {
+                const students = await studentsRes.json();
+                const transactions = await paymentsRes.json();
+                const classes = await classesRes.json();
+
+                allTransactions = transactions;
+                allPayments = transactions; // For legacy transactions usage
+
+                const FEES = 5000; // Fixed fee for now
+
+                allSummaries = students.map(s => {
+                    // Use loose equality (==) for student_id to handle string/number mismatch
+                    const studentPayments = transactions.filter(p => p.student_id == s.id);
+                    const paid = studentPayments.reduce((acc, curr) => acc + Number(curr.amount), 0);
+                    const balance = FEES - paid;
+
+                    let status = 'Unpaid';
+                    if (paid >= FEES) status = 'Paid';
+                    else if (paid > 0) status = 'Partial';
+
+                    const cls = classes.find(c => c.id == s.class_id) || { name: s.class_name || 'Unknown' };
+
+                    return {
+                        id: s.id,
+                        name: s.name,
+                        class_name: cls.name,
+                        total_fees: FEES,
+                        paid: paid,
+                        balance: balance,
+                        status: status
+                    };
+                });
+
+                populateClassFilter(allSummaries);
+                filterAndRender();
                 updateStats(allSummaries);
 
-                // Populate Class Filter if empty
-                populateClassFilter(allSummaries);
+                // Refresh Reports since data has updated
+                loadReports();
+            } else {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="7" style="color:red; text-align:center;">Failed to load data.</td></tr>';
             }
-
         } catch (err) {
             console.error('Error loading payments:', err);
         }
@@ -149,16 +189,22 @@ document.addEventListener('DOMContentLoaded', () => {
         filter.innerHTML = '<option value="">All Classes</option>' + classes.map(c => `<option value="${c}">${c}</option>`).join('');
 
         filter.onchange = (e) => {
-            const val = e.target.value;
-            const search = document.getElementById('search-student').value.toLowerCase();
-            filterAndRender(val, search);
+            filterAndRender();
         };
     }
 
-    function filterAndRender(cls, search) {
-        let filtered = allSummaries;
+    function filterAndRender() {
+        const filter = document.getElementById('filter-class');
+        const searchInput = document.getElementById('search-student');
+        let cls = filter ? filter.value : '';
+        let search = searchInput ? searchInput.value.toLowerCase() : '';
+
+        let filtered = allSummaries || [];
         if (cls) filtered = filtered.filter(s => s.class_name === cls);
-        if (search) filtered = filtered.filter(s => s.name.toLowerCase().includes(search));
+        if (search) filtered = filtered.filter(s =>
+            s.name.toLowerCase().includes(search) ||
+            String(s.id).includes(search)
+        );
         renderPayments(filtered);
     }
 
@@ -264,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 1. Class Summary
         const classStats = {};
-        allPayments.forEach(p => {
+        allSummaries.forEach(p => {
             const cls = p.class_name || 'Unknown';
             if (!classStats[cls]) classStats[cls] = { expected: 0, collected: 0, balance: 0 };
 
@@ -288,7 +334,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 2. Top Defaulters
         const defaultersBody = document.getElementById('defaultersReportBody');
         if (defaultersBody) {
-            const topDefaulters = [...allPayments]
+            const topDefaulters = [...allSummaries]
                 .sort((a, b) => b.balance - a.balance)
                 .slice(0, 5); // Top 5
 
@@ -475,14 +521,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Search Filter
         document.getElementById('search-student')?.addEventListener('input', (e) => {
-            const term = e.target.value.toLowerCase();
-            // Filter allPayments
-            const filtered = allPayments.filter(p =>
-                (p.name && p.name.toLowerCase().includes(term)) ||
-                (p.id && String(p.id).includes(term)) ||
-                (p.class_name && p.class_name.toLowerCase().includes(term))
-            );
-            renderPayments(filtered);
+            filterAndRender();
         });
     }
 

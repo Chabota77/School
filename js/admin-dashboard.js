@@ -223,9 +223,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (confirm('Delete this teacher? This will also remove their access.')) {
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`/ api / teachers / ${id} `, {
+                const res = await fetch(`/api/teachers/${id}`, {
                     method: 'DELETE',
-                    headers: { 'Authorization': `Bearer ${token} ` }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
                 if (res.ok) {
                     alert('Teacher deleted');
